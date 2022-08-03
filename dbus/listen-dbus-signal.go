@@ -12,11 +12,12 @@ func listenDbusSignal(){
 	/* golang dbus 教程
 	https://www.codeplayer.org/Wiki/go/%E5%9C%A8go%E4%B8%AD%E4%BD%BF%E7%94%A8dbus%E5%92%8Cgsettings.html
 	*/
+	// TOD
 
 	// 监听信号
 	sessionBus, err := dbus.SessionBus()
-	err = sessionBus.BusObject().AddMatchSignal("org.freedesktop.DBus", "NameOwnerChanged",
-		dbus.WithMatchObjectPath("/org/freedesktop/DBus")).Err
+	err = sessionBus.BusObject().AddMatchSignal("com.wangbin.daemon.interface", "sigProgress",
+		dbus.WithMatchObjectPath("/wangbin")).Err
 
 	signalCh := make(chan  *dbus.Signal, 10)
 	sessionBus.Signal(signalCh)
@@ -24,11 +25,7 @@ func listenDbusSignal(){
 		for {
 			select {
 			case sig := <-signalCh:
-
-				if sig.Path == "/org/freedesktop/DBus" &&
-					sig.Name == "org.freedesktop.DBus.NameOwnerChanged" {
-					logger.Info("sig: ", sig)
-				}
+				logger.Info("sig: ", sig)
 			}
 		}
 	}()
