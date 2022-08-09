@@ -5,10 +5,12 @@ TARGET = Client
 TEMPLATE = app
 
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    powerinterface.cpp
 
 
 HEADERS  += \
-    Client.h
+    Client.h \
+    powerinterface.h
 
 FORMS    +=
