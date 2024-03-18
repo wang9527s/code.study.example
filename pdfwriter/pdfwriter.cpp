@@ -39,6 +39,8 @@ void pdfwriter::append_page(QImage img)
         pdf_writer->newPage();
     }
     pdf_painter->drawImage(0, 0, img, 0, 0, -1, -1);
+    // 双层pdf，计算文字的大小，坐标，并绘制
+    //pdf_painter->drawText();
 }
 
 pdfwriter::~pdfwriter()
