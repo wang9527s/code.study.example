@@ -4,18 +4,20 @@
 #include <QThread>
 #include <QDebug>
 
-class Thread:public QThread
+class Thread : public QThread
 {
     Q_OBJECT
 
 public slots:
     void slot_main()
     {
-        qDebug()<<"from thread slot_main:" <<currentThreadId();
+        qDebug() << "from thread slot_main:" << currentThreadId();
     }
+
 protected:
-    void run() {
-        qDebug()<<"thread thread:"<<currentThreadId();
+    void run()
+    {
+        qDebug() << "thread thread:" << currentThreadId();
     }
 };
 

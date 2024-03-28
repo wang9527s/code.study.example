@@ -13,22 +13,22 @@ int main(int argc, char *argv[])
 
     Client inter;
 
-    PowerInterface * powInter = new PowerInterface(nullptr);
-    auto checkLowPower=[=]{
-        bool onBattery=powInter->onBattery();
-        BatteryPercentageMap data=powInter->batteryPercentage();
+    PowerInterface *powInter = new PowerInterface(nullptr);
+    auto checkLowPower = [=] {
+        bool onBattery = powInter->onBattery();
+        BatteryPercentageMap data = powInter->batteryPercentage();
         int batteryPercentage = uint(qMin(100.0, qMax(0.0, data.value("Display"))));
-        bool lowPower= batteryPercentage<60 && onBattery;
-        qDebug()<<"update power: onBattery "<<onBattery<<", batteryPercentage "
-              <<batteryPercentage<< "isLowPower"<<lowPower;
+        bool lowPower = batteryPercentage < 60 && onBattery;
+        qDebug() << "update power: onBattery " << onBattery << ", batteryPercentage "
+                 << batteryPercentage << "isLowPower" << lowPower;
     };
 
-    QObject::connect(powInter,&PowerInterface::BatteryPercentageChanged,[=]{
-        qDebug()<<"update: BatteryPercentageChanged";
+    QObject::connect(powInter, &PowerInterface::BatteryPercentageChanged, [=] {
+        qDebug() << "update: BatteryPercentageChanged";
         checkLowPower();
     });
-    QObject::connect(powInter,&PowerInterface::OnBatteryChanged,[=]{
-        qDebug()<<"update: OnBatteryChanged";
+    QObject::connect(powInter, &PowerInterface::OnBatteryChanged, [=] {
+        qDebug() << "update: OnBatteryChanged";
         checkLowPower();
     });
 

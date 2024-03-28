@@ -14,15 +14,15 @@ int main(int argc, char *argv[])
     QString pdf_path = "D:\\test.pdf";
 
     pdfwriter::util.init(pdf_path);
-    pdfwriter* pdf = new pdfwriter();
+    pdfwriter *pdf = new pdfwriter();
 
     for (QString path : image_paths) {
         if (path.split('.').last() != "png")
             continue;
         if (pdf->append_count == 10) {
 
-             delete pdf;
-             pdf = new pdfwriter();
+            delete pdf;
+            pdf = new pdfwriter();
         }
 
         pdf->append_page(QImage(dir.absoluteFilePath(path)));

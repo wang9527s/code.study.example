@@ -13,9 +13,8 @@ int main(int argc, char *argv[])
     QSystemSemaphore sem_end("capture-end", 1, QSystemSemaphore::Create);
     int i;
     qInfo() << "start";
-    while(true)
-    {
-        sem.acquire(); //只require 不release
+    while (true) {
+        sem.acquire(); // 只require 不release
         qInfo() << "capture start";
         QThread::msleep(300);
         /* 调用相机接口 */

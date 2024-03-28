@@ -16,14 +16,15 @@ pdfwriter::pdfwriter()
     pdf_file = new QFile(util.new_pathname());
     if (!pdf_file->open(QIODevice::WriteOnly)) {
         qInfo() << pdf_file << "open failed";
-        return ;
+        return;
     }
 
     pdf_writer = new QPdfWriter(pdf_file);
     pdf_writer->setResolution(150);
     pdf_writer->setPageMargins(QMarginsF(0.0, 0.0, 0.0, 0.0));
     // 添加文字（复制时用到）
-    // pdf_writer->setPageSize(QPageSize(QPageSize::A4, QPageSize::Inch, QString(), QPageSize::ExactMatch));
+    // pdf_writer->setPageSize(QPageSize(QPageSize::A4, QPageSize::Inch, QString(),
+    // QPageSize::ExactMatch));
     pdf_painter = new QPainter(pdf_writer);
 }
 
@@ -35,12 +36,12 @@ void pdfwriter::append_page(QImage img)
     }
 
     append_count++;
-    if (append_count >1) {
+    if (append_count > 1) {
         pdf_writer->newPage();
     }
     pdf_painter->drawImage(0, 0, img, 0, 0, -1, -1);
     // 双层pdf，计算文字的大小，坐标，并绘制
-    //pdf_painter->drawText();
+    // pdf_painter->drawText();
 }
 
 pdfwriter::~pdfwriter()
@@ -67,17 +68,15 @@ void pdf_util::init(QString pathname)
 QString pdf_util::new_pathname()
 {
     QString name = QString("%1_export_%2.pdf")
-            .arg(QFileInfo(output_pathname).baseName())
-            .arg(QString::number(++file_index))
-            ;
-    inputs.append( path + '/' + name);
+                       .arg(QFileInfo(output_pathname).baseName())
+                       .arg(QString::number(++file_index));
+    inputs.append(path + '/' + name);
     return inputs.last();
 }
 
 void pdf_util::merge_pdf()
 {
-    auto merge = [](QString output, QStringList inputs)
-    {
+    auto merge = [](QString output, QStringList inputs) {
         qint64 time = QDateTime::currentMSecsSinceEpoch();
         QProcess process;
         QString program = "./qpdf";
@@ -95,7 +94,7 @@ void pdf_util::merge_pdf()
         process.start(program, arguments);
         process.waitForFinished(300 * 1000);
         qInfo() << QString("merge, use time: %1s")
-                   .arg((QDateTime::currentMSecsSinceEpoch() - time) / 1000.0);
+                       .arg((QDateTime::currentMSecsSinceEpoch() - time) / 1000.0);
     };
 
     if (inputs.size() > 1) {
@@ -110,4 +109,3 @@ void pdf_util::merge_pdf()
         QFile::remove(e);
     }
 }
-

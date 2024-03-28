@@ -3,7 +3,6 @@
 
 #include <QWidget>
 
-
 #include <QSqlDatabase>
 #include <QDebug>
 #include <QApplication>
@@ -18,7 +17,6 @@
 #include <QTableView>
 #include <QSqlTableModel>
 #include <QLabel>
-
 
 class Widget : public QWidget
 {
@@ -35,8 +33,8 @@ private slots:
 private:
     void removeRow(int row);
 
-    QTableView * view;
+    QTableView *view;
     QSqlQueryModel model;
-    QLabel * icon;
+    QLabel *icon;
 };
 #endif // WIDGET_H

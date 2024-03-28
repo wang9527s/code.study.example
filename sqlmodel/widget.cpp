@@ -7,50 +7,49 @@
 #include <QFile>
 #include <QLineEdit>
 
-QStringList names = QStringList()
-        << u8"大嘴" << u8"葵花" << "Tony" << "Sony" << "Joy"
-        << u8"爱丽丝" << u8"晴律师" << u8"喜马拉雅" << u8"刘快乐"
-        << u8"百里" << u8"里斯" << u8"李昂" << u8"小郭" << u8"我在";
+QStringList names = QStringList() << u8"大嘴" << u8"葵花" << "Tony"
+                                  << "Sony"
+                                  << "Joy" << u8"爱丽丝" << u8"晴律师" << u8"喜马拉雅" << u8"刘快乐"
+                                  << u8"百里" << u8"里斯" << u8"李昂" << u8"小郭" << u8"我在";
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
-    QPushButton * addbtn = new QPushButton(u8"添加记录");
-    QPushButton * delbtn = new QPushButton(u8"删除记录(delete)");
-    QPushButton * updateBtn = new QPushButton(u8"更新记录");
-    QLineEdit * search = new QLineEdit;
+    QPushButton *addbtn = new QPushButton(u8"添加记录");
+    QPushButton *delbtn = new QPushButton(u8"删除记录(delete)");
+    QPushButton *updateBtn = new QPushButton(u8"更新记录");
+    QLineEdit *search = new QLineEdit;
     search->setPlaceholderText(u8"请输入查询");
     icon = new QLabel;
     view = new QTableView;
-    QHBoxLayout * btnpl = new QHBoxLayout;
+    QHBoxLayout *btnpl = new QHBoxLayout;
     btnpl->addWidget(addbtn);
     btnpl->addWidget(delbtn);
     btnpl->addWidget(updateBtn);
     btnpl->addWidget(search);
     btnpl->addStretch();
     btnpl->addWidget(icon);
-    QVBoxLayout * pl = new QVBoxLayout(this);
+    QVBoxLayout *pl = new QVBoxLayout(this);
     pl->addLayout(btnpl);
     pl->addWidget(view);
-    connect(view, &QTableView::clicked, [=](const QModelIndex &index){
-        QSqlRecord curRec=model.record(index.row());
+    connect(view, &QTableView::clicked, [=](const QModelIndex &index) {
+        QSqlRecord curRec = model.record(index.row());
 
-        QVariant va= curRec.value("image");
+        QVariant va = curRec.value("image");
         if (va.isValid()) {
-            QByteArray data=va.toByteArray();
+            QByteArray data = va.toByteArray();
             QPixmap pic;
             pic.loadFromData(data);
             icon->setPixmap(pic.scaledToWidth(100));
         }
     });
-    connect(addbtn, &QPushButton::clicked,this,[=]{addRow();});
-    connect(delbtn, &QPushButton::clicked,this,[=]{
+    connect(addbtn, &QPushButton::clicked, this, [=] { addRow(); });
+    connect(delbtn, &QPushButton::clicked, this, [=] {
         int row = view->currentIndex().row();
         removeRow(row);
     });
-    connect(updateBtn, &QPushButton::clicked,this, &Widget::onUpdateData);
+    connect(updateBtn, &QPushButton::clicked, this, &Widget::onUpdateData);
     connect(search, &QLineEdit::textChanged, this, &Widget::onSearch);
-
 
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("test.db");
@@ -60,8 +59,9 @@ Widget::Widget(QWidget *parent)
 
     // 创建表格
     QSqlQuery query;
-    if (!query.exec("CREATE TABLE IF NOT EXISTS person (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT,"
-                    " age INTEGER, date DATE, image BLOB)")) {
+    if (!query.exec(
+            "CREATE TABLE IF NOT EXISTS person (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT,"
+            " age INTEGER, date DATE, image BLOB)")) {
         qDebug() << "create table failed" << query.lastError().text();
     }
 
@@ -74,7 +74,7 @@ Widget::Widget(QWidget *parent)
     model.setHeaderData(4, Qt::Horizontal, "照片");
 
     int init_count = 5 - model.rowCount();
-    while( init_count-- > 0 && true) {
+    while (init_count-- > 0 && true) {
         addRow();
     }
 
@@ -97,7 +97,7 @@ void Widget::onUpdateData()
     query.bindValue(":date", QDateTime::currentDateTime());
 
     QByteArray data;
-    QFile* file=new QFile(":/icon/img/01.png");
+    QFile *file = new QFile(":/icon/img/01.png");
     file->open(QIODevice::ReadOnly);
     data = file->readAll();
     file->close();
@@ -129,7 +129,8 @@ void Widget::onSearch(QString content)
     }
 }
 
-void Widget::addRow() {
+void Widget::addRow()
+{
     QSqlQuery query;
     query.prepare("INSERT INTO person (name, age, date, image) VALUES (?, ?, ?, ?)");
     query.addBindValue(names[qrand() % 10]);
@@ -137,7 +138,7 @@ void Widget::addRow() {
     query.addBindValue(QDateTime::currentDateTime());
 
     QByteArray data;
-    QFile* file=new QFile(":/icon/img/00.JPG");
+    QFile *file = new QFile(":/icon/img/00.JPG");
     file->open(QIODevice::ReadOnly);
     data = file->readAll();
     file->close();
@@ -153,11 +154,11 @@ void Widget::addRow() {
 }
 void Widget::removeRow(int row)
 {
-    QSqlRecord  curRec = model.record(row);
+    QSqlRecord curRec = model.record(row);
     if (curRec.isEmpty())
         return;
 
-    int id=curRec.value("id").toInt();
+    int id = curRec.value("id").toInt();
     QSqlQuery query;
     query.prepare("delete  from person where ID = :ID");
     query.bindValue(":ID", id);
