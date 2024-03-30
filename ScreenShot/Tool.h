@@ -6,6 +6,7 @@
 #include <QRect>
 #include <QScreen>
 #include <QPainter>
+#include <QClipboard>
 
 class Tool
 {
@@ -38,6 +39,14 @@ public:
         int h = qAbs(p1.y() - p2.y());
         return QRect(x, y, w, h);
     };
+
+    static void copyPixmapToClipboard(QPixmap pixmap)
+    {
+        QImage image = pixmap.toImage();
+        // 获取剪贴板对象
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setImage(image);
+    }
 };
 
 #endif // TOOL_H

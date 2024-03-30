@@ -12,7 +12,7 @@
 #include <QWidget>
 #include <QLineEdit>
 #include <QInputMethodEvent>
-
+#include <QLabel>
 #include "selectshotarea.h"
 #include "drawcontent.h"
 
@@ -25,8 +25,15 @@ class ScreenShots : public QWidget
     QPixmap background;
     QPixmap grayBackground;
     QPixmap show_pix;
-    DrawContent draw;
+
     QWidget *buttons;
+    OperateType operate_type = SelectArea;
+
+    QString inputText;
+    QPoint press_pos;
+    QPoint end_pos;
+    QRect rt;
+    QList<DrawItemBase *> items;
 
 public:
     explicit ScreenShots(QWidget *parent = 0);
@@ -41,10 +48,11 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
     bool event(QEvent *event) override;
     void paintEvent(QPaintEvent *);
-    void leaveEvent(QEvent *event) override;
 
 private:
+    void initButtons();
     void showButtons(QRect select_rect);
     void updateMouseShape(QPoint pos);
+    void save_and_exit(QString path, QString name);
 };
 #endif // SCREENSHOTS_H
