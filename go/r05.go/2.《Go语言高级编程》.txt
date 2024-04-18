@@ -1,0 +1,98 @@
+/* ********************      第1章 语言基础      ************************* */
+1.3 数组、字符串和切片
+
+避免切片内存泄漏
+func FindPhoneNumber(filename string) []byte {
+    b, _ := ioutil.ReadFile(filename)
+    b = regexp.MustCompile("[0-9]+").Find(b)
+    return append([]byte{}, b...)
+}
+{
+var a []*int{ ... }
+a[len(a)-1] = nil // GC回收最后一个元素内存
+a = a[:len(a)-1]  // 从切片删除最后一个元素
+}
+
+
+函数执行之前所有代码都运行在同一个goroutine，也就是程序的主系统线程中。因此，如果某个init函数
+内部用go关键字启动了新的goroutine的话，新的goroutine只有在进入main.main函数之后才可能被执行到。
+
+1.4 函数、方法和接口
+    1.4.3 ???在说神马
+
+1.5 面向并发的内存模型
+1.5.6 基于Channel的通信
+无缓冲
+    无缓存的Channel上的发送操作总在对应的接收操作完成前发生             （接收阻塞等待发送）
+    对于从无缓冲Channel进行的接收，发生在对该Channel进行的发送完成之前    （发送阻塞等待接收）
+有缓冲
+    对于带缓冲的Channel，对于Channel的第K个接收完成操作发生在第K+C个发送操作完成之前，其中C是Channel的缓存大小
+    （缓冲区满后，发送方阻塞，等待接收方接收）
+
+for{} select{}  阻塞main goroutine
+
+1.6 常见的并发模式
+    并发不是并行
+    推荐使用接收等待发送的channel用法
+
+    下面2个从通道中获取值是一样的
+        for {
+            v := <-in
+        }
+        for v := range in {
+        }
+    1.6.2 生产消费模型
+    1.6.3 发布订阅模型
+        func (p *Publisher) sendTopic(
+        	sub subscriber, topic topicFunc, v interface{}, wg *sync.WaitGroup,
+        ) {
+        	defer wg.Done()
+        	if topic != nil && !topic(v) {
+                有订阅规则，并且不符合规则的，return
+        		return
+        	}
+
+        	向 无订阅规则（订阅全部）、符合订阅规则的 发布消息。
+        }
+    1.6.5 赢者为王
+    1.6.7 并发的安全退出
+        //close(Channel)和wg.Wait()
+        func main() {
+            cancel := make(chan bool)
+
+            var wg sync.WaitGroup
+            for i := 0; i < 10; i++ {
+                wg.Add(1)
+                go worker(&wg, cancel)
+            }
+
+            time.Sleep(time.Second)
+            close(cancel)
+            wg.Wait()
+        }
+
+    1.6.8 context包 ？？？
+        TODO
+
+
+
+
+
+/* ********************      第2章 CGO基础      ************************* */
+C和Go混合编程
+/* ********************      第3章 GO汇编语言      ************************* */
+/* ********************      第4章 RPC和Protobuf      ************************* */
+RPC是远程过程调用的缩写（Remote Procedure Call）
+TODO
+    待学习
+
+
+
+
+
+
+
+
+
+
+
