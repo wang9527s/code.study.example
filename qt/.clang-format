@@ -1,0 +1,70 @@
+Language: Cpp
+BasedOnStyle: LLVM
+
+# 每行字符的限制，0表示没有限制
+ColumnLimit: 100
+# 允许排序#include				
+SortIncludes: false
+# 缩进宽度								
+IndentWidth: 4
+# 访问说明符(public、private等)的偏移
+AccessModifierOffset: -4	
+# 延续的行的缩进宽度					
+ContinuationIndentWidth: 4						
+
+# 开括号(开圆括号、开尖括号、开方括号)后的对齐: Align, DontAlign, AlwaysBreak(总是在开括号后换行)
+AlignAfterOpenBracket:	Align
+
+# 水平对齐二元和三元表达式的操作数
+# AlignOperands: false
+# 在三元运算符前换行
+BreakBeforeTernaryOperators:	true
+
+# 继承最常用的指针和引用的对齐方式
+DerivePointerAlignment:	false
+
+# 关闭格式化
+DisableFormat:	false
+
+# 允许短的函数放在同一行: None, InlineOnly(定义在类中), Empty(空函数), Inline(定义在类中，空函数), All
+AllowShortFunctionsOnASingleLine:	Empty
+# 允许短的if语句保持在同一行
+AllowShortIfStatementsOnASingleLine:	false
+# 允许短的循环保持在同一行
+AllowShortLoopsOnASingleLine:	false
+
+# false表示函数实参要么都在同一行，要么都各自一行
+BinPackArguments:	false						
+# false表示所有形参要么都在同一行，要么都各自一行
+BinPackParameters:	false						
+
+# 在构造函数的初始化列表的冒号后换行 AfterColon
+BreakConstructorInitializers: BeforeColon
+# 在构造函数的初始化列表的逗号前换行
+BreakConstructorInitializersBeforeComma:	true
+
+
+BreakBeforeBraces:	Custom
+# 大括号换行，只有当BreakBeforeBraces设置为Custom时才有效
+BraceWrapping:   
+  # class定义后面
+  AfterClass:	true
+  # 控制语句后面
+  AfterControlStatement:	false
+  # enum定义后面
+  AfterEnum:	false
+  # 函数定义后面
+  AfterFunction:	true
+  # 命名空间定义后面
+  AfterNamespace:	true
+  # struct定义后面
+  AfterStruct:	false
+  # union定义后面
+  AfterUnion:	false
+  # catch之前
+  BeforeCatch:	true
+  # else之前
+  BeforeElse:	true
+  # 缩进大括号
+  IndentBraces:	false
+

@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>back.png</file>
+        <file>line-arrow.png</file>
+        <file>text.png</file>
+        <file>cancel.png</file>
+        <file>ok.png</file>
+        <file>draw-rect.png</file>
+        <file>select-rect.png</file>
+    </qresource>
+</RCC>
