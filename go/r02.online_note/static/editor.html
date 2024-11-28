@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Document Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .editor-container {
+            width: 80%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: #f9f9f9;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="editor-container">
+    <h1>Real-time Document Editor</h1>
+    <textarea id="editor" placeholder="Start editing your document here..."></textarea>
+    <button id="saveButton">Save Document</button>
+</div>
+
+<script>
+    // WebSocket connection
+    const socket = new WebSocket("ws://localhost:8080/ws");
+
+    socket.onopen = function(event) {
+        console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = function(event) {
+        console.log("Received update from server:", event.data);
+        // When a new update is received, update the textarea content
+        document.getElementById('editor').value = event.data;
+    };
+
+    socket.onclose = function(event) {
+        console.log("WebSocket connection closed");
+    };
+
+    socket.onerror = function(error) {
+        console.log("WebSocket error:", error);
+    };
+
+    // Saving the document
+    document.getElementById('saveButton').onclick = function() {
+        const content = document.getElementById('editor').value;
+
+        // Sending the content to the server to save and broadcast
+        fetch("/save", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `content=${encodeURIComponent(content)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status) {
+                alert("Document saved!");
+            } else {
+                alert("Failed to save document");
+            }
+        })
+        .catch(error => {
+            console.error("Error saving document:", error);
+            alert("Error saving document");
+        });
+    };
+
+    // Optionally, we can fetch the current document when the page loads
+    window.onload = function() {
+        fetch("/document")
+            .then(response => response.json())
+            .then(data => {
+                if (data.content) {
+                    document.getElementById('editor').value = data.content;
+                }
+            })
+            .catch(error => {
+                console.error("Error loading document:", error);
+            });
+    };
+</script>
+
+</body>
+</html>
