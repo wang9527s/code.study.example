@@ -1,6 +1,6 @@
-#include "inmemoryconnector.hpp"
-#include "cpphttplibconnector.hpp"
-#include "warehouseapp.hpp"
+#include "conn/inmemoryconnector.hpp"
+#include "conn/cpphttplibconnector.hpp"
+#include "server_handle.hpp"
 
 #include <iostream>
 #include <vector>
@@ -53,20 +53,23 @@ int main() {
   JsonRpc2Server rpcServer;
 
   // Bindings
-  WarehouseServer app;
-  rpcServer.Add("GetProduct", GetHandle(&WarehouseServer::GetProduct, app), {"id"});
-  rpcServer.Add("AddProduct", GetHandle(&WarehouseServer::AddProduct, app), {"product"});
-  rpcServer.Add("AllProducts", GetHandle(&WarehouseServer::AllProducts, app), {});
+  ServerHandle app;
+  rpcServer.Add("GetProduct", GetHandle(&ServerHandle::GetProduct, app), {"id"});
+  rpcServer.Add("AddProduct", GetHandle(&ServerHandle::AddProduct, app), {"product"});
+  rpcServer.Add("AllProducts", GetHandle(&ServerHandle::AllProducts, app), {});
 
   // cout << "Running in-memory example" << "\n";
   // InMemoryConnector inMemoryConnector(rpcServer);
   // doWarehouseStuff(inMemoryConnector);
 
+  // std::this_thread::sleep_for(1s);
+  // cout << "\n" << "\n";
+
   cout << "Running http example" << "\n";
   CppHttpLibServerConnector httpServer(rpcServer, 8484);
   cout << "Starting http server: " << std::boolalpha << httpServer.StartListening() << "\n";
   CppHttpLibClientConnector httpClient("localhost", 8484);
-  std::this_thread::sleep_for(2s);
+  std::this_thread::sleep_for(1s);
   doWarehouseStuff(httpClient);
 
   return 0;
