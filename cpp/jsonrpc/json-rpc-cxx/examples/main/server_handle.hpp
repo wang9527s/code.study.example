@@ -27,6 +27,9 @@ public:
         result.push_back(p.second);
       return result;
     }
+    int calc(int a, int b) {
+      return a + b;
+    }
 
 private:
   std::map<std::string, Product> products;

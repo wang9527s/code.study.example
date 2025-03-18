@@ -17,6 +17,8 @@ public:
   Product C_GetProduct(const std::string &id) { return client.CallMethod<Product>(1, "GetProduct", {id}); }
   vector<Product> C_AllProducts() { return client.CallMethod<vector<Product>>(1, "AllProducts", {}); }
 
+  int calc(int a, int b) {return client.CallMethod<int>(1, "calc", {a, b}); }
+
 private:
   JsonRpcClient &client;
 };
@@ -47,6 +49,9 @@ void doWarehouseStuff(IClientConnector &clientConnector) {
   for (const auto &p: all) {
     cout << p.name << endl;
   }
+
+  cout << "\n\n";
+  cout << appClient.calc(5, 6) << "\n";
 }
 
 int main() {
@@ -57,6 +62,7 @@ int main() {
   rpcServer.Add("GetProduct", GetHandle(&ServerHandle::GetProduct, app), {"id"});
   rpcServer.Add("AddProduct", GetHandle(&ServerHandle::AddProduct, app), {"product"});
   rpcServer.Add("AllProducts", GetHandle(&ServerHandle::AllProducts, app), {});
+  rpcServer.Add("calc", GetHandle(&ServerHandle::calc, app), {"int", "int"});
 
   // cout << "Running in-memory example" << "\n";
   // InMemoryConnector inMemoryConnector(rpcServer);
