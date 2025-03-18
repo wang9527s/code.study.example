@@ -30,6 +30,9 @@ public:
         for (const auto &p : all) {
             std::cout << p.name << "\n";
         }
+
+        std::cout << "\n";
+        std::cout << calc(5, 6) << "\n";
     }
 
     bool C_AddProduct(const Product &p)
@@ -43,6 +46,11 @@ public:
     std::vector<Product> C_AllProducts()
     {
         return client->CallMethod<std::vector<Product>>(1, "AllProducts", {});
+    }
+
+    int calc(int a, int b)
+    {
+        return client->CallMethod<int>(1, "calc", {a, b});
     }
 
 private:
