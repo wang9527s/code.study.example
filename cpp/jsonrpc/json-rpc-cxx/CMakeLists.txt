@@ -15,6 +15,7 @@ add_executable(ex-rpc
     examples/main/server.hpp
     examples/main/client.hpp
     examples/main/types.h
+    examples/conn/asiotcpconnector.hpp
     examples/conn/inmemoryconnector.hpp
     examples/conn/cpphttplibconnector.hpp
 )

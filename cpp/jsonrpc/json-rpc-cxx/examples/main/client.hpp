@@ -5,6 +5,7 @@
 #include <vector>
 #include "conn/cpphttplibconnector.hpp"
 #include "conn/inmemoryconnector.hpp"
+#include "conn/asiotcpconnector.hpp"
 #include "types.h"
 
 using namespace jsonrpccxx;
@@ -14,17 +15,19 @@ class AppClient
 public:
     explicit AppClient()
     {
-        httpClient = new CppHttpLibClientConnector("localhost", 8484);
+        httpClient = new AsioClientConnector("localhost", 8484);
         client = new JsonRpcClient(*httpClient, version::v2);
     }
     void test()
     {
         Product p = {"0xff", 22.4, "Product hello", category::cash_carry};
-        std::cout << "Adding product: " << std::boolalpha << C_AddProduct(p) << "\n";
+        C_AddProduct(p) ;
+        std::cout << "Adding product: " << std::boolalpha << p.id << "\n";
 
         p.id = "0xff2";
         p.name = "Product world";
-        std::cout << "Adding product: " << std::boolalpha << C_AddProduct(p) << "\n";
+        C_AddProduct(p);
+        std::cout << "Adding product: " << std::boolalpha <<  p.id << "\n";
 
         auto all = C_AllProducts();
         for (const auto &p : all) {
@@ -32,7 +35,8 @@ public:
         }
 
         std::cout << "\n";
-        std::cout << calc(5, 6) << "\n";
+        int ret = calc(5, 6);
+        std::cout << ret << "\n";
     }
 
     bool C_AddProduct(const Product &p)
@@ -56,5 +60,5 @@ public:
 private:
     JsonRpcClient *client;
 
-    CppHttpLibClientConnector *httpClient;
+    AsioClientConnector *httpClient;
 };
