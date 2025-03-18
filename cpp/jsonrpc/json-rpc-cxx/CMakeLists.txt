@@ -15,11 +15,13 @@ add_executable(ex-rpc
     examples/main/server.hpp
     examples/main/client.hpp
     examples/main/types.h
+    examples/conn/asiotcpconnector.hpp
     examples/conn/inmemoryconnector.hpp
     examples/conn/cpphttplibconnector.hpp
 )
 
 target_compile_options(ex-rpc PUBLIC "${_warning_opts}")
 target_link_libraries(ex-rpc json-rpc-cxx Threads::Threads)
+target_include_directories(ex-rpc SYSTEM PRIVATE vendor/asio)  # 不加入此句，linux编译失败
 target_include_directories(ex-rpc SYSTEM PRIVATE vendor)
 target_include_directories(ex-rpc PRIVATE examples)

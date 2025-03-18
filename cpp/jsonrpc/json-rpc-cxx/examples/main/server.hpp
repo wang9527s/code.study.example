@@ -3,7 +3,10 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <iostream>
 #include "types.h"
+
+#include "conn/asiotcpconnector.hpp"
 
 using namespace jsonrpccxx;
 
@@ -55,12 +58,13 @@ public:
         rpcServer.Add("AllProducts", GetHandle(&ServerHandle::AllProducts, app), {});
         rpcServer.Add("calc", GetHandle(&ServerHandle::calc, app), {"int", "int"});
 
-        httpServer = new CppHttpLibServerConnector(rpcServer, 8484);
-        std::cout << "Starting http server: " << std::boolalpha << httpServer->StartListening() << "\n";
+        httpServer = new AsioServerConnector(rpcServer, 8484);
+        httpServer->StartListening();
+        std::cout << "Starting http server: "  << "\n";
     }
     JsonRpc2Server rpcServer;
 
     // Bindings
     ServerHandle app;
-    CppHttpLibServerConnector *httpServer;
+    AsioServerConnector *httpServer;
 };
