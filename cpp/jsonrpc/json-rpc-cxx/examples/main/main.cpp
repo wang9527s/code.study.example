@@ -11,7 +11,7 @@
 using namespace jsonrpccxx;
 using namespace std;
 
-
+ClientEvent cEvent;
 
 void doWarehouseStuff(IClientConnector &clientConnector) {
   JsonRpcClient client(clientConnector, version::v2);
@@ -42,6 +42,8 @@ void doWarehouseStuff(IClientConnector &clientConnector) {
 
   cout << "\n\n";
   cout << appClient.calc(5, 6) << "\n";
+
+  appClient.registerEvent(&cEvent);
 }
 
 int main() {
@@ -53,6 +55,8 @@ int main() {
   rpcServer.Add("AddProduct", GetHandle(&ServerHandle::AddProduct, app), {"product"});
   rpcServer.Add("AllProducts", GetHandle(&ServerHandle::AllProducts, app), {});
   rpcServer.Add("calc", GetHandle(&ServerHandle::calc, app), {"int", "int"});
+
+  rpcServer.Add("registerEvent.mouseEnter", GetHandle(&ServerHandle::calc, app), {"int", "int"});
 
   // cout << "Running in-memory example" << "\n";
   // InMemoryConnector inMemoryConnector(rpcServer);

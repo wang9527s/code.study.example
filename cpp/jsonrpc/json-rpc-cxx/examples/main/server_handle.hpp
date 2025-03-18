@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "types.h"
+#include <thread>
 
 class ServerHandle {
 public:
@@ -29,6 +30,15 @@ public:
     }
     int calc(int a, int b) {
       return a + b;
+    }
+    void registerEvent(ClientEvent * event) { 
+       std::thread t([event]{
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        event->mouseEnter(3,3);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        event->mouseLeave(9,9);
+       });
+       t.detach();
     }
 
 private:

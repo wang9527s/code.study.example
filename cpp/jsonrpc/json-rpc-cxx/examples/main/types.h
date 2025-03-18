@@ -27,3 +27,13 @@ inline void from_json(const nlohmann::json &j, Product &p) {
   j.at("price").get_to(p.price);
   j.at("category").get_to(p.cat);
 }
+
+class ClientEvent {
+  public:
+    void mouseEnter(int x, int y) {
+      std::cout << "mouseEnter: " << x << y << "\n";
+    }
+    void mouseLeave(int x, int y) {
+      std::cout << "mouseLeave: " << x << y << "\n";
+    }
+};
