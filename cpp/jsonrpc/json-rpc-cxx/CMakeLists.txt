@@ -13,6 +13,7 @@ find_package(Threads)
 add_executable(ex-rpc
     examples/main/main.cpp
     examples/main/server_handle.hpp
+    examples/main/client_handle.hpp
     examples/main/types.h
     examples/conn/inmemoryconnector.hpp
     examples/conn/cpphttplibconnector.hpp

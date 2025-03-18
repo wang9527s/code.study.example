@@ -1,6 +1,7 @@
 #include "conn/inmemoryconnector.hpp"
 #include "conn/cpphttplibconnector.hpp"
 #include "server_handle.hpp"
+#include "client_handle.hpp"
 
 #include <iostream>
 #include <vector>
@@ -10,22 +11,11 @@
 using namespace jsonrpccxx;
 using namespace std;
 
-class WareHouseClient {
-public:
-  explicit WareHouseClient(JsonRpcClient &client) : client(client) {}
-  bool C_AddProduct(const Product &p) { return client.CallMethod<bool>(1, "AddProduct", {p}); }
-  Product C_GetProduct(const std::string &id) { return client.CallMethod<Product>(1, "GetProduct", {id}); }
-  vector<Product> C_AllProducts() { return client.CallMethod<vector<Product>>(1, "AllProducts", {}); }
 
-  int calc(int a, int b) {return client.CallMethod<int>(1, "calc", {a, b}); }
-
-private:
-  JsonRpcClient &client;
-};
 
 void doWarehouseStuff(IClientConnector &clientConnector) {
   JsonRpcClient client(clientConnector, version::v2);
-  WareHouseClient appClient(client);
+  ClientHandle appClient(client);
   Product p;
   p.id = "0xff";
   p.price = 22.4;
