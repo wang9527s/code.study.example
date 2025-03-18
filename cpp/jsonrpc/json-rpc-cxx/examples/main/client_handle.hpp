@@ -16,7 +16,11 @@ class ClientHandle {
     std::vector<Product> C_AllProducts() { return client.CallMethod<std::vector<Product>>(1, "AllProducts", {}); }
   
     int calc(int a, int b) {return client.CallMethod<int>(1, "calc", {a, b}); }
-  
+    void registerEvent(ClientEvent * event) { 
+      // client.CallMethod<void>(1, "registerEvent", {"mouseLeave"}); 
+      // client.CallMethod<void>(1, "registerEvent", {"mouseEnter"}); 
+      // NotifyHandle handle;
+    }
   private:
     JsonRpcClient &client;
   };

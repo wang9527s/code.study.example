@@ -46,6 +46,23 @@ void doWarehouseStuff(IClientConnector &clientConnector) {
   appClient.registerEvent(&cEvent);
 }
 
+class ClientEvent_Porxy {
+public:
+  void mouseEnter(int x, int y) {
+    if (cb != nullptr) {
+      cb->mouseEnter(x, y);
+    }
+    std::cout << "proxy mouseEnter: " << x << y << "\n";
+  }
+  void mouseLeave(int x, int y) {
+    if (cb != nullptr) {
+      cb->mouseLeave(x, y);
+    }
+    std::cout << "proxy mouseLeave: " << x << y << "\n";
+  }
+  ClientEvent * cb = nullptr;
+};
+
 int main() {
   JsonRpc2Server rpcServer;
 
@@ -56,7 +73,8 @@ int main() {
   rpcServer.Add("AllProducts", GetHandle(&ServerHandle::AllProducts, app), {});
   rpcServer.Add("calc", GetHandle(&ServerHandle::calc, app), {"int", "int"});
 
-  rpcServer.Add("registerEvent.mouseEnter", GetHandle(&ServerHandle::calc, app), {"int", "int"});
+  ClientEvent_Porxy event_proxy;
+  rpcServer.Add("registerEvent.mouseEnter", GetHandle(&ClientEvent_Porxy::mouseEnter, event_proxy), {"int", "int"});
 
   // cout << "Running in-memory example" << "\n";
   // InMemoryConnector inMemoryConnector(rpcServer);
@@ -72,5 +90,6 @@ int main() {
   std::this_thread::sleep_for(1s);
   doWarehouseStuff(httpClient);
 
+  std::this_thread::sleep_for(5s);
   return 0;
 }
