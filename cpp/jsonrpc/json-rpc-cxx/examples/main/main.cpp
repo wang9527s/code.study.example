@@ -46,22 +46,7 @@ void doWarehouseStuff(IClientConnector &clientConnector) {
   appClient.registerEvent(&cEvent);
 }
 
-class ClientEvent_Porxy {
-public:
-  void mouseEnter(int x, int y) {
-    if (cb != nullptr) {
-      cb->mouseEnter(x, y);
-    }
-    std::cout << "proxy mouseEnter: " << x << y << "\n";
-  }
-  void mouseLeave(int x, int y) {
-    if (cb != nullptr) {
-      cb->mouseLeave(x, y);
-    }
-    std::cout << "proxy mouseLeave: " << x << y << "\n";
-  }
-  ClientEvent * cb = nullptr;
-};
+
 
 int main() {
   JsonRpc2Server rpcServer;
