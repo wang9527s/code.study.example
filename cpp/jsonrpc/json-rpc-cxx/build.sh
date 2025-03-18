@@ -2,12 +2,16 @@
 
 set -e
 
-rm -rf build 
-mkdir build
+clear 
 
-cd build
+rm -rf tmp-build 
+mkdir tmp-build
+
+cd tmp-build
 
 cmake ..
 
 echo "make -j$(nproc)"
 make -j$(nproc)
+
+./ex-rpc

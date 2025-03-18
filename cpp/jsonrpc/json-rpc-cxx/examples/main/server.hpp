@@ -5,9 +5,11 @@
 #include "types.h"
 #include <thread>
 
+using namespace jsonrpccxx;
+
 class ServerHandle {
 public:
-  ServerHandle() :
+ServerHandle() :
     products() {}
 
     bool AddProduct(const Product &p) {
@@ -31,17 +33,28 @@ public:
     int calc(int a, int b) {
       return a + b;
     }
-    void registerEvent(ClientEvent * event) { 
-       std::thread t([event]{
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        event->mouseEnter(3,3);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        event->mouseLeave(9,9);
-       });
-       t.detach();
-    }
 
 private:
   std::map<std::string, Product> products;
+};
+
+class AppServer {
+  public:
+  AppServer()
+  {
+    rpcServer.Add("GetProduct", GetHandle(&ServerHandle::GetProduct, app), {"id"});
+    rpcServer.Add("AddProduct", GetHandle(&ServerHandle::AddProduct, app), {"product"});
+    rpcServer.Add("AllProducts", GetHandle(&ServerHandle::AllProducts, app), {});
+    rpcServer.Add("calc", GetHandle(&ServerHandle::calc, app), {"int", "int"});
+
+    httpServer = new CppHttpLibServerConnector(rpcServer, 8484);
+    std::cout << "Starting http server: " << std::boolalpha << httpServer->StartListening() << "\n";
+  
+  }
+  JsonRpc2Server rpcServer;
+
+  // Bindings
+  ServerHandle app;
+  CppHttpLibServerConnector  * httpServer;
 };
 

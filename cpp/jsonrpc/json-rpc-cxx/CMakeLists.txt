@@ -12,8 +12,8 @@ target_include_directories(json-rpc-cxx INTERFACE include)
 find_package(Threads)
 add_executable(ex-rpc
     examples/main/main.cpp
-    examples/main/server_handle.hpp
-    examples/main/client_handle.hpp
+    examples/main/server.hpp
+    examples/main/client.hpp
     examples/main/types.h
     examples/conn/inmemoryconnector.hpp
     examples/conn/cpphttplibconnector.hpp
