@@ -22,5 +22,6 @@ add_executable(ex-rpc
 
 target_compile_options(ex-rpc PUBLIC "${_warning_opts}")
 target_link_libraries(ex-rpc json-rpc-cxx Threads::Threads)
+target_include_directories(ex-rpc SYSTEM PRIVATE vendor/asio)  # 不加入此句，linux编译失败
 target_include_directories(ex-rpc SYSTEM PRIVATE vendor)
 target_include_directories(ex-rpc PRIVATE examples)
