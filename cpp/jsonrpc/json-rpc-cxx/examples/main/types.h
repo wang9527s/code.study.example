@@ -26,15 +26,23 @@ inline void from_json(const nlohmann::json &j, Product &p)
     j.at("category").get_to(p.cat);
 }
 
-class ClientEvent
-{
+
+class EventListener {
 public:
-    void mouseEnter(int x, int y)
-    {
+    std::string name;
+    std::string handleName;
+    void onMousePressed(int x, int y) {
         std::cout << "mouseEnter: " << x << y << "\n";
     }
-    void mouseLeave(int x, int y)
-    {
-        std::cout << "mouseLeave: " << x << y << "\n";
-    }
 };
+
+void to_json(nlohmann::json &j, const EventListener &p)
+{
+    j = nlohmann::json {{"name", p.name}, {"handleName", p.handleName}};
+}
+
+void from_json(const nlohmann::json &j, EventListener &p)
+{
+    j.at("name").get_to(p.name);
+    j.at("handleName").get_to(p.handleName);
+}

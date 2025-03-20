@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 17)
 project(json-rpc-cxx VERSION 0.0.1 LANGUAGES CXX)
 
+# 遇到第一个编译错误，则就停止编译
+add_compile_options(-Wfatal-errors)
 
 include(GNUInstallDirs)
 

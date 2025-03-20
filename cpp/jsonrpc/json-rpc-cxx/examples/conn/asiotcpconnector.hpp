@@ -12,6 +12,8 @@
 #include <memory>
 #include <mutex>
 
+// client 端继承自 IClientConnector, JsonRpcClient持有IClientConnector指针
+//   用于给服务端发消息，基类中新增 Notify 函数，
 class AsioClientConnector : public jsonrpccxx::IClientConnector {
 public:
     AsioClientConnector(const std::string &host, int port)
@@ -35,6 +37,8 @@ public:
         asio::read(socket, asio::buffer(response.data(), response.size()));
         return response;
     }
+
+    void Notify(const std::string &request) {};
 
 private:
     asio::io_context io_context;
@@ -93,7 +97,9 @@ private:
                         std::string request(len, '\0');
                         asio::read(*socket, asio::buffer(request.data(), request.size()));
 
+                        std::cout << "server, recv" << request << "\n";
                         std::string response = server.HandleRequest(request);
+                        std::cout << "server, response" << response << "\n";
 
                         uint32_t resplen = htonl(static_cast<uint32_t>(response.size()));
                         asio::write(*socket, asio::buffer(&resplen, sizeof(resplen)));

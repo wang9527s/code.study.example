@@ -11,8 +11,6 @@
 using namespace jsonrpccxx;
 using namespace std;
 
-ClientEvent cEvent;
-
 int main()
 {
     cout << "Running http example"

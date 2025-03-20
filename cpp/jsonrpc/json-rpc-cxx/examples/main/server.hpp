@@ -43,6 +43,10 @@ public:
     {
         return a + b;
     }
+    int registerEventListener(EventListener evt) {
+        std::cout << "sever registerEventListener" << std::endl;
+        return 0;
+    }
 
 private:
     std::map<std::string, Product> products;
@@ -58,11 +62,14 @@ public:
         rpcServer.Add("AllProducts", GetHandle(&ServerHandle::AllProducts, app), {});
         rpcServer.Add("calc", GetHandle(&ServerHandle::calc, app), {"int", "int"});
 
+        rpcServer.Add("registerEventListener", GetHandle(&ServerHandle::registerEventListener, app), {"evt"});
+
         httpServer = new AsioServerConnector(rpcServer, 8484);
         httpServer->StartListening();
         std::cout << "Starting http server: "  << "\n";
     }
     JsonRpc2Server rpcServer;
+    JsonRpcClient * json_rpc_cb_client_ = nullptr;
 
     // Bindings
     ServerHandle app;

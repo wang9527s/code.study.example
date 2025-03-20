@@ -13,8 +13,11 @@ using namespace jsonrpccxx;
 class AppClient
 {
 public:
+    EventListener evt;
     explicit AppClient()
     {
+        evt.handleName = "EventListener";
+        evt.name = "123";
         httpClient = new AsioClientConnector("localhost", 8484);
         client = new JsonRpcClient(*httpClient, version::v2);
     }
@@ -37,6 +40,9 @@ public:
         std::cout << "\n";
         int ret = calc(5, 6);
         std::cout << ret << "\n";
+
+        // std::to_string((unsigned long long)evt)
+        client->CallMethod<int>(1, "registerEventListener", {evt});
     }
 
     bool C_AddProduct(const Product &p)
@@ -59,6 +65,7 @@ public:
 
 private:
     JsonRpcClient *client;
+    JsonRpc2Server * json_rpc_cb_server_;
 
     AsioClientConnector *httpClient;
 };
