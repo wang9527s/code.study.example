@@ -37,12 +37,15 @@ public:
             std::cout << p.name << "\n";
         }
 
-        std::cout << "\n";
-        int ret = calc(5, 6);
-        std::cout << ret << "\n";
+        // std::cout << "\n";
+        // int ret = calc(5, 6);
+        // std::cout << ret << "\n";
 
         // std::to_string((unsigned long long)evt)
         client->CallMethod<int>(1, "registerEventListener", {evt});
+
+        // TODO
+        //client->Add("AddProduct", GetHandle(&EventListener::onMousePressed, evt), {"x", "y"});
     }
 
     bool C_AddProduct(const Product &p)

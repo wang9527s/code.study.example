@@ -34,6 +34,9 @@ public:
     void onMousePressed(int x, int y) {
         std::cout << "mouseEnter: " << x << y << "\n";
     }
+    void onMouseRelease(int x, int y) {
+        std::cout << "onMouseRelease: " << x << y << "\n";
+    }
 };
 
 void to_json(nlohmann::json &j, const EventListener &p)
