@@ -5,16 +5,24 @@
 #include <vector>
 #include <iostream>
 #include "types.h"
-
+#include <jsonrpccxx/client.hpp>
+#include <jsonrpccxx/server.hpp>
 #include "conn/asiotcpconnector.hpp"
 
 using namespace jsonrpccxx;
 
+class BaseServer {
+public:
+    virtual void regiserCb (EventListener evt) = 0;
+};
+
 class ServerHandle
 {
 public:
-    ServerHandle()
+    BaseServer * server_;
+    ServerHandle(BaseServer * server)
         : products()
+        , server_(server)
     {
     }
 
@@ -45,6 +53,7 @@ public:
     }
     int registerEventListener(EventListener evt) {
         std::cout << "sever registerEventListener" << std::endl;
+        server_->regiserCb(evt);
         return 0;
     }
 
@@ -52,26 +61,34 @@ private:
     std::map<std::string, Product> products;
 };
 
-class AppServer
+class AppServer : public BaseServer
 {
 public:
     AppServer()
     {
-        rpcServer.Add("GetProduct", GetHandle(&ServerHandle::GetProduct, app), {"id"});
-        rpcServer.Add("AddProduct", GetHandle(&ServerHandle::AddProduct, app), {"product"});
-        rpcServer.Add("AllProducts", GetHandle(&ServerHandle::AllProducts, app), {});
-        rpcServer.Add("calc", GetHandle(&ServerHandle::calc, app), {"int", "int"});
+        app = new ServerHandle(this);
+        rpcServer.Add("GetProduct", GetHandle(&ServerHandle::GetProduct, *app), {"id"});
+        rpcServer.Add("AddProduct", GetHandle(&ServerHandle::AddProduct, *app), {"product"});
+        rpcServer.Add("AllProducts", GetHandle(&ServerHandle::AllProducts, *app), {});
+        rpcServer.Add("calc", GetHandle(&ServerHandle::calc, *app), {"int", "int"});
 
-        rpcServer.Add("registerEventListener", GetHandle(&ServerHandle::registerEventListener, app), {"evt"});
+        rpcServer.Add("registerEventListener", GetHandle(&ServerHandle::registerEventListener, *app), {"evt"});
 
         httpServer = new AsioServerConnector(rpcServer, 8484);
         httpServer->StartListening();
         std::cout << "Starting http server: "  << "\n";
+
+        json_rpc_cb_client_ = new JsonRpcClient(*httpServer, version::v2);
+        // json_rpc_cb_client_->CallMethod<int>(1, "registerEventListener", {evt});
+    }
+    void regiserCb (EventListener evt) {
+        std::string key = evt.handleName + "@" + evt.name;
+        json_rpc_cb_client_->CallMethod<int>(1, key, {100, 100});
     }
     JsonRpc2Server rpcServer;
     JsonRpcClient * json_rpc_cb_client_ = nullptr;
 
     // Bindings
-    ServerHandle app;
+    ServerHandle * app;
     AsioServerConnector *httpServer;
 };

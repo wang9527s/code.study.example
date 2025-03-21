@@ -38,16 +38,27 @@ public:
         return response;
     }
 
-    void Notify(const std::string &request) {};
+    std::string Notify(const std::string &request) {
+        std::cout << "client Notify" << request << "\n";
+    };
 
 private:
     asio::io_context io_context;
     asio::ip::tcp::socket socket;
 };
 
+class SocketHandle {
+    public:
+    SocketHandle(asio::ip::tcp::socket * p)
+        : socket_(*p)
+    {
 
+    }
 
-class AsioServerConnector {
+    asio::ip::tcp::socket & socket_;
+};
+
+class AsioServerConnector : public jsonrpccxx::IClientConnector {
 public:
     AsioServerConnector(jsonrpccxx::JsonRpcServer &server, int port)
         : server(server), io_context(), acceptor(io_context), port(port), is_running(false) {}
@@ -72,6 +83,26 @@ public:
         io_context.stop();
         if (server_thread.joinable()) server_thread.join();
     }
+
+    // TODO 目前仅支持单连接
+    std::string Send(const std::string &request) override {
+        std::cout << "client, send" << request << "\n";
+        uint32_t len = htonl(static_cast<uint32_t>(request.size()));
+        asio::write(socket, asio::buffer(&len, sizeof(len)));
+        asio::write(socket, asio::buffer(request));
+
+        uint32_t response_len;
+        asio::read(socket, asio::buffer(&response_len, sizeof(response_len)));
+        response_len = ntohl(response_len);
+
+        std::string response(response_len, '\0');
+        asio::read(socket, asio::buffer(response.data(), response.size()));
+        return response;
+    }
+
+    std::string Notify(const std::string &request) {
+        std::cout << "server Notify" << request << "\n";
+    };
 
 private:
     void Run() {

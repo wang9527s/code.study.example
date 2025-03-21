@@ -1,5 +1,6 @@
 #pragma once
 #include <jsonrpccxx/client.hpp>
+#include <jsonrpccxx/server.hpp>
 #include <map>
 #include <string>
 #include <vector>
@@ -20,6 +21,7 @@ public:
         evt.name = "123";
         httpClient = new AsioClientConnector("localhost", 8484);
         client = new JsonRpcClient(*httpClient, version::v2);
+        json_rpc_cb_server_ = new JsonRpc2Server;
     }
     void test()
     {
@@ -44,8 +46,9 @@ public:
         // std::to_string((unsigned long long)evt)
         client->CallMethod<int>(1, "registerEventListener", {evt});
 
-        // TODO
-        //client->Add("AddProduct", GetHandle(&EventListener::onMousePressed, evt), {"x", "y"});
+        // std::string key = "EventListener@" + std::to_string((long long)&evt) + "@onMousePressed";
+        std::string key = evt.handleName + "@" + evt.name;
+        json_rpc_cb_server_->Add(key, GetHandle(&EventListener::onMousePressed, evt), {"x", "y"});
     }
 
     bool C_AddProduct(const Product &p)
