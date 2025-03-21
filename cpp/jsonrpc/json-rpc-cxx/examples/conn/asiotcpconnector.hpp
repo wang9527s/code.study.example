@@ -24,7 +24,7 @@ public:
     }
 
     std::string Send(const std::string &request) override {
-        std::cout << "client, send" << request << "\n";
+        std::cout << "client, send " << request << "\n";
         uint32_t len = htonl(static_cast<uint32_t>(request.size()));
         asio::write(socket, asio::buffer(&len, sizeof(len)));
         asio::write(socket, asio::buffer(request));
@@ -38,25 +38,12 @@ public:
         return response;
     }
 
-    std::string Notify(const std::string &request) {
-        std::cout << "client Notify" << request << "\n";
-    };
 
 private:
     asio::io_context io_context;
     asio::ip::tcp::socket socket;
 };
 
-class SocketHandle {
-    public:
-    SocketHandle(asio::ip::tcp::socket * p)
-        : socket_(*p)
-    {
-
-    }
-
-    asio::ip::tcp::socket & socket_;
-};
 
 class AsioServerConnector : public jsonrpccxx::IClientConnector {
 public:
@@ -86,23 +73,19 @@ public:
 
     // TODO 目前仅支持单连接
     std::string Send(const std::string &request) override {
-        std::cout << "client, send" << request << "\n";
+        std::cout << "server, send  444444444444444444" << request << "\n";
         uint32_t len = htonl(static_cast<uint32_t>(request.size()));
-        asio::write(socket, asio::buffer(&len, sizeof(len)));
-        asio::write(socket, asio::buffer(request));
+        asio::write(*latest_socket_, asio::buffer(&len, sizeof(len)));
+        asio::write(*latest_socket_, asio::buffer(request));
 
         uint32_t response_len;
-        asio::read(socket, asio::buffer(&response_len, sizeof(response_len)));
+        asio::read(*latest_socket_, asio::buffer(&response_len, sizeof(response_len)));
         response_len = ntohl(response_len);
 
         std::string response(response_len, '\0');
-        asio::read(socket, asio::buffer(response.data(), response.size()));
+        asio::read(*latest_socket_, asio::buffer(response.data(), response.size()));
         return response;
     }
-
-    std::string Notify(const std::string &request) {
-        std::cout << "server Notify" << request << "\n";
-    };
 
 private:
     void Run() {
@@ -117,6 +100,7 @@ private:
                 active_connections.insert(socket);
             }
 
+            latest_socket_ = socket;
             std::thread([this, socket]() {
                 try {
                     while (true) {
@@ -146,6 +130,7 @@ private:
         }
     }
 
+    std::shared_ptr<asio::ip::tcp::socket> latest_socket_;
     jsonrpccxx::JsonRpcServer &server;
     asio::io_context io_context;
     asio::ip::tcp::acceptor acceptor;

@@ -16,4 +16,4 @@ cmake ..
 echo "make -j$(nproc)"
 make -j$(nproc)
 
-gdb ./ex-rpc
+./ex-rpc

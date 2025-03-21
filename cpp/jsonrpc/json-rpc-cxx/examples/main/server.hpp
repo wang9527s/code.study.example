@@ -8,8 +8,11 @@
 #include <jsonrpccxx/client.hpp>
 #include <jsonrpccxx/server.hpp>
 #include "conn/asiotcpconnector.hpp"
+#include <thread>
+#include <chrono> 
 
 using namespace jsonrpccxx;
+using namespace std;
 
 class BaseServer {
 public:
@@ -53,7 +56,14 @@ public:
     }
     int registerEventListener(EventListener evt) {
         std::cout << "sever registerEventListener" << std::endl;
-        server_->regiserCb(evt);
+
+        {
+            std::thread([this, evt]() {
+                std::this_thread::sleep_for(1s);
+                server_->regiserCb(evt);
+            }).detach();
+        }
+        
         return 0;
     }
 
