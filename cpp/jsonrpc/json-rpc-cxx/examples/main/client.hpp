@@ -55,25 +55,30 @@ public:
 
         bool res = json_rpc_cb_server_->Add(key, GetHandle(&EventListener::onMousePressed, evt), {"x", "y"});
         std::cout << "add:  " << key << " " << res  << std::to_string((long long)json_rpc_cb_server_) << "\n";
-        client->CallMethod<int>(1, "registerEventListener", {evt});
+
+        res = json_rpc_cb_server_->Add(key, GetHandle(&EventListener::onMouseRelease, evt), {"x", "y"});
+        std::cout << "add:  " << key << " " << res  << std::to_string((long long)json_rpc_cb_server_) << "\n";
+
+
+        client->CallMethod<int>(g_msgid(), "registerEventListener", {evt});
     }
 
     bool C_AddProduct(const Product &p)
     {
-        return client->CallMethod<bool>(1, "AddProduct", {p});
+        return client->CallMethod<bool>(g_msgid(), "AddProduct", {p});
     }
     Product C_GetProduct(const std::string &id)
     {
-        return client->CallMethod<Product>(1, "GetProduct", {id});
+        return client->CallMethod<Product>(g_msgid(), "GetProduct", {id});
     }
     std::vector<Product> C_AllProducts()
     {
-        return client->CallMethod<std::vector<Product>>(1, "AllProducts", {});
+        return client->CallMethod<std::vector<Product>>(g_msgid(), "AllProducts", {});
     }
 
     int calc(int a, int b)
     {
-        return client->CallMethod<int>(1, "calc", {a, b});
+        return client->CallMethod<int>(g_msgid(), "calc", {a, b});
     }
 
 private:

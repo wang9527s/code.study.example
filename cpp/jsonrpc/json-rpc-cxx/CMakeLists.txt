@@ -26,6 +26,9 @@ add_executable(ex-rpc
     examples/conn/asiotcpconnector.hpp
     examples/conn/inmemoryconnector.hpp
     examples/conn/cpphttplibconnector.hpp
+
+    vendor/log/loguru.hpp
+    vendor/log/loguru.cpp
 )
 
 target_compile_options(ex-rpc PUBLIC "${_warning_opts}")

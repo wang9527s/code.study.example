@@ -1,6 +1,12 @@
 #pragma once
 #include <nlohmann/json.hpp>
 
+#include <thread>
+#include <chrono>
+#include <mutex>
+
+using namespace std::chrono_literals;
+
 enum class category { order, cash_carry };
 
 struct Product {
@@ -26,17 +32,29 @@ inline void from_json(const nlohmann::json &j, Product &p)
     j.at("category").get_to(p.cat);
 }
 
+int g_msgid() {
+    static int id = 0;
+    static std::mutex mtx; // 定义一个静态互斥锁
+    std::lock_guard<std::mutex> lock(mtx);
+
+    id++;
+    return id;
+}
 
 class EventListener {
 public:
     std::string name;
     std::string handleName;
     int onMousePressed(int x, int y) {
-        std::cout << "mouseEnter: " << x << y << "\n";
-        return 0;
+        std::cout << "mouseEnter 1 : " << x << y << "\n";
+        std::this_thread::sleep_for(3s);
+        std::cout << "mouseEnter 2 : " << x << y << "\n";
+        return 10;
     }
     void onMouseRelease(int x, int y) {
-        std::cout << "onMouseRelease: " << x << y << "\n";
+        std::cout << "onMouseRelease 1: " << x << y << "\n";
+        std::this_thread::sleep_for(0.2s);
+        std::cout << "onMouseRelease 2: " << x << y << "\n";
     }
 };
 

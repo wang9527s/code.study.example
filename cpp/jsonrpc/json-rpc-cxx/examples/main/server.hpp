@@ -10,6 +10,7 @@
 #include "conn/asiotcpconnector.hpp"
 #include <thread>
 #include <chrono> 
+#include "log/loguru.hpp"
 
 using namespace jsonrpccxx;
 using namespace std;
@@ -56,13 +57,7 @@ public:
     }
     int registerEventListener(EventListener evt) {
         std::cout << "sever registerEventListener" << std::endl;
-
-        {
-            std::thread([this, evt]() {
-                std::this_thread::sleep_for(1s);
-                server_->regiserCb(evt);
-            }).detach();
-        }
+        server_->regiserCb(evt);
         
         return 0;
     }
@@ -89,12 +84,22 @@ public:
         std::cout << "Starting http server: "  << "\n";
 
         json_rpc_cb_client_ = new JsonRpcClient(*httpServer, version::v2);
-        // json_rpc_cb_client_->CallMethod<int>(1, "registerEventListener", {evt});
+        // json_rpc_cb_client_->CallMethod<int>(g_msgid(), "registerEventListener", {evt});
     }
     void regiserCb (EventListener evt) {
-        std::string key = evt.handleName + "@" + evt.name;
-        key= "onMousePressed";
-        json_rpc_cb_client_->CallMethod<int>(1, key, {100, 100});
+        std::thread([this, evt]() {
+            std::this_thread::sleep_for(2s);
+            std::string key;
+            key= "onMousePressed";
+            int aa = json_rpc_cb_client_->CallMethod<int>(g_msgid(), key, {100, 100});
+            LOG_F(INFO, "[Server ] call cb , res = %d", aa);
+        }).detach();
+        std::thread([this, evt]() {
+            std::string key;
+            std::this_thread::sleep_for(2.5s);
+            key= "onMouseRelease";
+            json_rpc_cb_client_->CallNotification(key, {100, 99});
+        }).detach();
     }
     JsonRpc2Server rpcServer;
     JsonRpcClient * json_rpc_cb_client_ = nullptr;
