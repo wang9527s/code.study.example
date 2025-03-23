@@ -22,6 +22,6 @@ int main()
     AppClient cli;
     cli.test();
 
-    std::this_thread::sleep_for(2s);
+    std::this_thread::sleep_for(20s);
     return 0;
 }

@@ -19,36 +19,43 @@ public:
     {
         evt.handleName = "EventListener";
         evt.name = "123";
-        httpClient = new AsioClientConnector("localhost", 8484);
-        client = new JsonRpcClient(*httpClient, version::v2);
         json_rpc_cb_server_ = new JsonRpc2Server;
+        httpClient = new AsioClientConnector(*json_rpc_cb_server_,"localhost", 8484);
+        client = new JsonRpcClient(*httpClient, version::v2);
+
     }
     void test()
     {
-        Product p = {"0xff", 22.4, "Product hello", category::cash_carry};
-        C_AddProduct(p) ;
-        std::cout << "Adding product: " << std::boolalpha << p.id << "\n";
+        // Product p = {"0xff", 22.4, "Product hello", category::cash_carry};
+        // C_AddProduct(p) ;
+        // std::cout << "Adding product: " << std::boolalpha << p.id << "\n";
 
-        p.id = "0xff2";
-        p.name = "Product world";
-        C_AddProduct(p);
-        std::cout << "Adding product: " << std::boolalpha <<  p.id << "\n";
+        // p.id = "0xff2";
+        // p.name = "Product world";
+        // C_AddProduct(p);
+        // std::cout << "Adding product: " << std::boolalpha <<  p.id << "\n";
 
-        auto all = C_AllProducts();
-        for (const auto &p : all) {
-            std::cout << p.name << "\n";
-        }
+        // auto all = C_AllProducts();
+        // for (const auto &p : all) {
+        //     std::cout << p.name << "\n";
+        // }
 
         // std::cout << "\n";
         // int ret = calc(5, 6);
         // std::cout << ret << "\n";
 
         // std::to_string((unsigned long long)evt)
-        client->CallMethod<int>(1, "registerEventListener", {evt});
+        std::cout << "\n\n";
+
+
 
         // std::string key = "EventListener@" + std::to_string((long long)&evt) + "@onMousePressed";
         std::string key = evt.handleName + "@" + evt.name;
-        json_rpc_cb_server_->Add(key, GetHandle(&EventListener::onMousePressed, evt), {"x", "y"});
+        key = "onMousePressed";
+
+        bool res = json_rpc_cb_server_->Add(key, GetHandle(&EventListener::onMousePressed, evt), {"x", "y"});
+        std::cout << "add:  " << key << " " << res  << std::to_string((long long)json_rpc_cb_server_) << "\n";
+        client->CallMethod<int>(1, "registerEventListener", {evt});
     }
 
     bool C_AddProduct(const Product &p)

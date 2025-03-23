@@ -4,6 +4,7 @@
 #include "typemapper.hpp"
 #include <map>
 #include <string>
+#include <iostream>
 
 namespace jsonrpccxx {
 
@@ -24,6 +25,8 @@ namespace jsonrpccxx {
       if (!mapping.empty()) {
         this->mapping[name] = mapping;
       }
+      std::cout  << "Add methods, key " << name << ", " << std::to_string((long long)this) << "\n";
+
       return true;
     }
 
@@ -34,6 +37,8 @@ namespace jsonrpccxx {
       if (!mapping.empty()) {
         this->mapping[name] = mapping;
       }
+      std::cout  << "Add notifications, key " << name << ", " << std::to_string((long long)this) << "\n";
+
       return true;
     }
 
@@ -52,6 +57,7 @@ namespace jsonrpccxx {
 
     json InvokeMethod(const std::string &name, const json &params) {
       auto method = methods.find(name);
+      std::cout  << "InvokeMethod, key " << name << ", " << std::to_string((long long)this) << "\n";
       if (method == methods.end()) {
         throw JsonRpcException(method_not_found, "method not found: " + name);
       }

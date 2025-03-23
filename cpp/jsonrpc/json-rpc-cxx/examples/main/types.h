@@ -31,8 +31,9 @@ class EventListener {
 public:
     std::string name;
     std::string handleName;
-    void onMousePressed(int x, int y) {
+    int onMousePressed(int x, int y) {
         std::cout << "mouseEnter: " << x << y << "\n";
+        return 0;
     }
     void onMouseRelease(int x, int y) {
         std::cout << "onMouseRelease: " << x << y << "\n";

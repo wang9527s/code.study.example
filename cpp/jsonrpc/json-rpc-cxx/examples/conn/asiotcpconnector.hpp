@@ -12,38 +12,99 @@
 #include <memory>
 #include <mutex>
 
-// client 端继承自 IClientConnector, JsonRpcClient持有IClientConnector指针
-//   用于给服务端发消息，基类中新增 Notify 函数，
+
+
 class AsioClientConnector : public jsonrpccxx::IClientConnector {
 public:
-    AsioClientConnector(const std::string &host, int port)
-        : io_context(), socket(io_context) {
+    AsioClientConnector(jsonrpccxx::JsonRpcServer &json_rpc_cb_server_, const std::string &host, int port)
+        : rpc_cb_server_(json_rpc_cb_server_), io_context(), socket(io_context), has_response(false) {
         asio::ip::tcp::resolver resolver(io_context);
         auto endpoints = resolver.resolve(host, std::to_string(port));
         asio::connect(socket, endpoints);
+
+        // 启动唯一接收线程
+        listener_thread = std::thread([this]() {
+            try {
+                while (true) {
+                    uint32_t len = 0;
+                    asio::read(socket, asio::buffer(&len, sizeof(len)));
+                    len = ntohl(len);
+
+                    std::string message(len, '\0');
+                    asio::read(socket, asio::buffer(message.data(), message.size()));
+
+                    {
+                        std::lock_guard<std::mutex> lock(response_mutex);
+                        // 简单判断：如果正在等待响应，我们把消息认为是回应（或者你可以加 request id 判断）
+                        if (waiting_response) {
+                            last_response = message;
+                            has_response = true;
+                            waiting_response = false;
+                            response_cv.notify_one();
+                        } else {
+                            // 否则认为是回调请求，走回调处理
+                            std::cout << "[listener] recv cb msg: " << message << std::endl;
+
+                            std::string response = rpc_cb_server_.HandleRequest(message);
+                            std::cout << "hhh" << response << "\n";
+                            if (!response.empty()) {
+                                uint32_t resplen = htonl(static_cast<uint32_t>(response.size()));
+                                asio::write(socket, asio::buffer(&resplen, sizeof(resplen)));
+                                asio::write(socket, asio::buffer(response));
+                            }
+                        }
+                    }
+                }
+            } catch (const std::exception &e) {
+                std::cerr << "[listener error]: " << e.what() << std::endl;
+            }
+        });
+    }
+
+    ~AsioClientConnector() {
+        try {
+            socket.close();
+        } catch (...) {}
+        if (listener_thread.joinable()) listener_thread.join();
     }
 
     std::string Send(const std::string &request) override {
-        std::cout << "client, send " << request << "\n";
+        std::lock_guard<std::mutex> send_lock(send_mutex);  // 串行化写入
+
+        std::cout << "[Client] sending: " << request << std::endl;
+
+        {
+            std::lock_guard<std::mutex> lock(response_mutex);
+            waiting_response = true;
+            has_response = false;
+        }
+
         uint32_t len = htonl(static_cast<uint32_t>(request.size()));
         asio::write(socket, asio::buffer(&len, sizeof(len)));
         asio::write(socket, asio::buffer(request));
 
-        uint32_t response_len;
-        asio::read(socket, asio::buffer(&response_len, sizeof(response_len)));
-        response_len = ntohl(response_len);
+        std::unique_lock<std::mutex> response_lock(response_mutex);
+        response_cv.wait(response_lock, [this]() { return has_response; });
 
-        std::string response(response_len, '\0');
-        asio::read(socket, asio::buffer(response.data(), response.size()));
-        return response;
+        std::cout << "[Client] received response: " << last_response << std::endl;
+        return last_response;
     }
 
-
 private:
+    jsonrpccxx::JsonRpcServer &rpc_cb_server_;
     asio::io_context io_context;
     asio::ip::tcp::socket socket;
-};
 
+    std::thread listener_thread;
+
+    std::mutex send_mutex; // 串行化写入
+
+    std::mutex response_mutex;
+    std::condition_variable response_cv;
+    std::string last_response;
+    bool has_response = false;
+    bool waiting_response = false;
+};
 
 class AsioServerConnector : public jsonrpccxx::IClientConnector {
 public:
@@ -73,7 +134,7 @@ public:
 
     // TODO 目前仅支持单连接
     std::string Send(const std::string &request) override {
-        std::cout << "server, send  444444444444444444" << request << "\n";
+        std::cout << "server, send " << request << "\n";
         uint32_t len = htonl(static_cast<uint32_t>(request.size()));
         asio::write(*latest_socket_, asio::buffer(&len, sizeof(len)));
         asio::write(*latest_socket_, asio::buffer(request));
@@ -84,6 +145,7 @@ public:
 
         std::string response(response_len, '\0');
         asio::read(*latest_socket_, asio::buffer(response.data(), response.size()));
+        std::cout << "server recv resp: " << response << "\n";
         return response;
     }
 
@@ -100,7 +162,7 @@ private:
                 active_connections.insert(socket);
             }
 
-            latest_socket_ = socket;
+                latest_socket_ = socket;
             std::thread([this, socket]() {
                 try {
                     while (true) {
@@ -117,8 +179,8 @@ private:
                         std::cout << "server, response" << response << "\n";
 
                         uint32_t resplen = htonl(static_cast<uint32_t>(response.size()));
-                        asio::write(*socket, asio::buffer(&resplen, sizeof(resplen)));
-                        asio::write(*socket, asio::buffer(response));
+                            asio::write(*socket, asio::buffer(&resplen, sizeof(resplen)));
+                            asio::write(*socket, asio::buffer(response));
                     }
                 } catch (const std::exception &e) {
                     // 可以添加日志输出：std::cerr << "Client connection error: " << e.what() << std::endl;

@@ -93,6 +93,7 @@ public:
     }
     void regiserCb (EventListener evt) {
         std::string key = evt.handleName + "@" + evt.name;
+        key= "onMousePressed";
         json_rpc_cb_client_->CallMethod<int>(1, key, {100, 100});
     }
     JsonRpc2Server rpcServer;
