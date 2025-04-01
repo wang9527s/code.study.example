@@ -1,0 +1,80 @@
+# 基础配置
+Language: Cpp                              # 指定语言为 C++
+BasedOnStyle: LLVM                         # 基于 LLVM 风格
+Standard: Cpp11                            # 使用 C++11 标准
+DisableFormat: false                       # 不禁用格式化
+
+# 缩进和对齐
+IndentWidth: 4                             # 缩进宽度为 4 个空格
+ContinuationIndentWidth: 4                 # 换行后的缩进宽度为 4 个空格
+AccessModifierOffset: -4                   # 访问修饰符（如 public、private）的偏移量为 -4
+NamespaceIndentation: None                 # 命名空间不缩进
+IndentCaseLabels: false                    # 不缩进 case 标签
+ConstructorInitializerIndentWidth: 4       # 构造函数初始化列表的缩进宽度为 4
+
+# 行宽和换行
+ColumnLimit: 120                           # 每行最多 130 个字符
+MaxEmptyLinesToKeep: 1                     # 最多保留 1 个空行
+
+# 空格和 Tab
+UseTab: Never                              # 不使用 Tab，使用空格
+TabWidth: 4                                # Tab 宽度为 4
+
+# 操作符和括号空格
+SpaceAfterCStyleCast: false                # C 风格类型转换后不加空格
+SpaceBeforeAssignmentOperators: true       # 赋值操作符前加空格
+SpaceBeforeParens: ControlStatements       # 控制语句的括号前加空格
+SpaceInEmptyParentheses: false             # 空括号内不加空格
+SpacesInAngles: false                      # 尖括号内不加空格
+SpacesInContainerLiterals: true            # 容器字面量内加空格
+SpacesInParentheses: false                 # 圆括号内不加空格
+SpacesInSquareBrackets: false              # 方括号内不加空格
+SpaceBeforeCpp11BracedList: true           # C++11 大括号列表前加空格
+
+# 指针和引用对齐
+PointerAlignment: Right                    # 指针和引用右对齐
+
+# 函数和参数格式化
+AllowShortFunctionsOnASingleLine: Empty    # 只有空函数可以放在同一行
+AllowShortIfStatementsOnASingleLine: false # 不允许短的 if 语句放在同一行
+AllowShortLoopsOnASingleLine: false        # 不允许短的循环放在同一行
+BinPackArguments: false                    # 函数实参要么都在同一行，要么都各自一行
+BinPackParameters: false                   # 函数形参要么都在同一行，要么都各自一行
+BreakConstructorInitializers: BeforeColon  # 在构造函数的初始化列表的冒号前换行
+BreakConstructorInitializersBeforeComma: true # 在构造函数的初始化列表的逗号前换行
+BreakBeforeBinaryOperators: All            # 在所有二元操作符前换行
+BreakBeforeTernaryOperators: true          # 在三元运算符前换行
+
+# 大括号换行规则
+BreakBeforeBraces: Custom                  # 自定义大括号换行规则
+BraceWrapping:                             
+  AfterClass: true                         # 类定义后换行
+  AfterControlStatement: false             # 控制语句后不换行
+  AfterEnum: false                         # 枚举定义后不换行
+  AfterFunction: true                      # 函数定义后换行
+  AfterNamespace: false                    # 命名空间定义后不换行
+  AfterStruct: false                       # 结构体定义后不换行
+  AfterUnion: false                        # 联合体定义后不换行
+  BeforeCatch: true                        # catch 前换行
+  BeforeElse: true                         # else 前换行
+  IndentBraces: false                      # 不缩进大括号
+
+# 注释格式化
+ReflowComments: true                       # 重新格式化注释
+SpacesBeforeTrailingComments: 1            # 尾部注释前加 1 个空格
+FixNamespaceComments: true                 # 修复命名空间注释
+
+# #include 分类规则
+SortIncludes: true                         # 排序 #include
+IncludeCategories:                         
+  - Regex: '"stdafx.h"'                    # 匹配 "stdafx.h"
+    Priority: -1                           # 优先级为 -1
+  - Regex: '^<'                            # 匹配系统头文件
+    Priority: 1                            # 优先级为 1
+  - Regex: '^"'                            # 匹配用户头文件
+    Priority: 2                            # 优先级为 2
+  - Regex: '.*'                            # 匹配其他文件
+    Priority: 4                            # 优先级为 4
+
+# C++11 风格
+Cpp11BracedListStyle: true                 # 使用 C++11 大括号初始化列表风格
