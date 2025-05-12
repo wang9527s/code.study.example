@@ -1,4 +1,19 @@
 
+### palacaze/sigslot
+
+1. 信号的连接/断开（connect/disconnect）是线程安全的；在函数内部已经加锁了
+
+```cpp
+namespace sigslot{
+class signal_base {
+    void add_slot(slot_ptr &&s) {
+        const group_id gid = s->group();
+
+        lock_type lock(m_mutex);
+    }
+}
+}
+
 ### ex-thread
 
   跨线程使用sigslot，demo验证结果
