@@ -3,6 +3,7 @@
 #include <syslog.h>
 #include <stdarg.h>
 #include <poll.h>
+#include <pwd.h>
 
 #include "Smb2Context.h"
 #include "PrivateData.h"
@@ -29,7 +30,8 @@ Smb2Context::Smb2Context()
   server.clear();
   share.clear();
   user.clear();
-  std::string sysuser = std::string(getlogin());
+  struct passwd *pw = getpwuid(getuid());
+  std::string sysuser = std::string(pw->pw_name);
   smb2SetUser(sysuser);
   password.clear();
   domain.clear();

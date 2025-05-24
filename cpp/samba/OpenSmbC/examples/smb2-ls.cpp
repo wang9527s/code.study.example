@@ -24,37 +24,34 @@ int main(int argc, char *argv[])
 {
   std::string err;
   Smb2ContextPtr smb2;
-  struct smb2_url *url;
-
-  if (argc < 2) {
-    usage();
-  }
-
   smb2 = Smb2Context::create();
   if (smb2 == NULL) {
     fprintf(stderr, "Failed to init context\n");
     exit(0);
   }
 
-  url = smb2_parse_url(smb2, argv[1], err);
-  if (url == NULL) {
-    fprintf(stderr, "Failed to parse url: %s\n", err.c_str());
-    exit(0);
-  }
+  // ... emm 可能存在版本兼容问题，之前版本参数解析的不太对，一直跑不通 
+  //      user解析成了 wangbin:1   所以一直跑不通
+  std::string server = "172.27.93.12";
+  std::string share = "smb_shared";
+  std::string user = "wangbin";   
+  std::string password = "1";
+  std::string domain = "";  // 如果没有域名就空着
 
-  smb2->smb2SetSecurityMode(SMB2_NEGOTIATE_SIGNING_ENABLED);
-  smb2->smb2SetPassword("Rain@123");
-  smb2->smb2SetDomain("CTADEV.LOCAL");
-  //smb2->smb2SetAuthMode(SMB2_SEC_NTLMSSP);
-  smb2->smb2SetAuthMode(SMB2_SEC_KRB5);
+  smb2->smb2SetUser(user);
+  smb2->smb2SetPassword(password);
+  smb2->smb2SetDomain(domain);
+  smb2->smb2SetAuthMode(SMB2_SEC_NTLMSSP);
+  smb2->smb2SetSecurityMode(0);
 
-  if (smb2->smb2_connect_share(url->server, url->share, url->user, err) != 0) {
-    printf("smb2_connect_share failed. %s\n", err.c_str());
-    exit(10);
+  if (smb2->smb2_connect_share(server, share, user, err) != 0) {
+      printf("smb2_connect_share failed. %s\n", err.c_str());
+      exit(10);
   }
 
   std::string pattern = "*";
-  smb2dir *dir = smb2->smb2_querydir(url->path, pattern, err);
+  std::string query_path = "john.dir";
+  smb2dir *dir = smb2->smb2_querydir(query_path, pattern, err);
   if (dir == NULL) {
     printf("smb2_opendir failed. %s\n", err.c_str());
     exit(10);
@@ -87,7 +84,6 @@ int main(int argc, char *argv[])
   uint8_t *buf = NULL; uint32_t buf_len = 0;
   smb2->smb2_get_security(path, &buf, &buf_len, err);
   smb2->smb2_disconnect_share();
-  smb2_destroy_url(url);
 
   return 0;
 }
