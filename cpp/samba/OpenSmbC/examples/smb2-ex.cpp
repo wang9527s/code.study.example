@@ -48,7 +48,10 @@ void usage(void) {
           "    cat <pathname>   printf files\n"
           "    push <from> <to>  push file to server\n"
           "    info <pathname>   printf file infos\n"
+          "    rm <pathname> delete file or dir\n"
+          "    mkdir <path> \n"
           "    sl         show remote shared list\n"
+          "    sec <pathname> get_security\n"
           "    q          exit program\n"
           "    h          print usage\n"
           "\n");
@@ -401,6 +404,22 @@ void push(std::string from, std::string to) {
   smb2->smb2_close(fh, err);
 }
 
+void get_security(std::string pathname) {
+  uint8_t *securityBuf = NULL;
+  uint32_t secLen = 0;
+  if (smb2->smb2_get_security(pathname, &securityBuf, &secLen, err) != 0) {
+    printf("Failed to get security descriptor - %s\n", err.c_str());
+    return;
+  }
+
+  struct smb2_security_descriptor *sd = nullptr;
+  smb2DecodeSecurityDescriptor(&sd, securityBuf, secLen, err);
+
+  printSecurityDescriptor(sd);
+  smb2FreeSecurityDescriptor(sd);
+  free(securityBuf);
+}
+
 int main(int argc, char *argv[]) {
   smb2 = Smb2Context::create();
 
@@ -423,8 +442,8 @@ int main(int argc, char *argv[]) {
     // std::cin 从标准输入读取一个“单词”，遇到空格、Tab 或换行符
     // std::cin >> cmd;
     // 读取整行
-    // std::getline(std::cin, cmd);
-    cmd = "push /home/wangbin/Readme.md Readme";
+    std::getline(std::cin, cmd);
+    // cmd = "push /home/wangbin/Readme.md Readme";
 
     auto cmd_params = split_by_space(cmd);
     std::cout << "do:  " << cmd << std::endl;
@@ -448,6 +467,28 @@ int main(int argc, char *argv[]) {
       }
       std::string path = cmd_params[1];
       show_info(path);
+    } else if (cmd_params[0] == "rm") {
+      if (cmd_params.size() < 2) {
+        std::cout << "failed, param err\n";
+        continue;
+      }
+      if (smb2->smb2_unlink(cmd_params[1], err) != SMB2_STATUS_SUCCESS) {
+        std::cout << "failed " << err << std::endl;
+      }
+    } else if (cmd_params[0] == "sec") {
+      if (cmd_params.size() < 2) {
+        std::cout << "failed, param err\n";
+        continue;
+      }
+      get_security(cmd_params[1]);
+    } else if (cmd_params[0] == "mkdir") {
+      if (cmd_params.size() < 2) {
+        std::cout << "failed, param err\n";
+        continue;
+      }
+      if (smb2->smb2_mkdir(cmd_params[1], err) != SMB2_STATUS_SUCCESS) {
+        std::cout << "failed " << err << std::endl;
+      }
     } else if (cmd_params[0] == "cat") {
       if (cmd_params.size() < 2) {
         std::cout << "failed, please input filename\n";
@@ -472,7 +513,7 @@ int main(int argc, char *argv[]) {
     }
     printf("\n");
 
-  } while (false);
+  } while (true);
 
   smb2->smb2_disconnect_share();
 
