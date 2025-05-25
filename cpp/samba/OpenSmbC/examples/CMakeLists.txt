@@ -3,6 +3,7 @@ find_library(POPT_LIBRARY popt)
 list(APPEND CORE_LIBRARIES ${POPT_LIBRARY})
 
 set(SOURCES smb2-cat
+            smb2-ex
             smb2-ftruncate
             smb2-ls
             smb2-put
