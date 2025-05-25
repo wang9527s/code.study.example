@@ -46,6 +46,7 @@ void usage(void) {
           "Usage:\n"
           "    l [path]   show files in optional path (default is root)\n"
           "    cat <pathname>   printf files\n"
+          "    push <from> <to>  push file to server\n"
           "    info <pathname>   printf file infos\n"
           "    sl         show remote shared list\n"
           "    q          exit program\n"
@@ -357,6 +358,49 @@ void show_info(std::string path) {
   }
 }
 
+void push(std::string from, std::string to) {
+  smb2fh *fh;
+  int count;
+  int fd;
+  uint8_t buf[256 * 1024];
+
+  fd = open(from.c_str(), O_RDONLY);
+  if (fd == -1) {
+    printf("Failed to open local file %s (%s)\n", from.c_str(),
+           strerror(errno));
+    return;
+  }
+
+  fh = smb2->smb2_open(to, O_WRONLY | O_CREAT, err);
+  if (fh == NULL) {
+    printf("smb2_open failed. %s\n", err.c_str());
+    return;
+  }
+
+  // TODO 原本的demo，这里有问题，smb2_write不成功。调半天了
+  /*
+  while ((count = read(fd, buf, 1024)) > 0)
+  {
+    smb2->smb2_write(fh, buf, count, err);
+  };
+  */
+  int offset = 0;
+  while ((count = read(fd, buf, 1024)) > 0) {
+    if (smb2->smb2_pwrite(fh, buf, count, offset, err) !=
+        SMB2_STATUS_SUCCESS) {
+      fprintf(
+          stderr,
+          "smb2_pwrite failed at offset %lld (%zu bytes written so far): %s\n",
+          static_cast<long long>(offset), static_cast<size_t>(offset),
+          err.empty() ? "Unknown error" : err.c_str());
+      break;
+    }
+    offset += count;
+  }
+  close(fd);
+  smb2->smb2_close(fh, err);
+}
+
 int main(int argc, char *argv[]) {
   smb2 = Smb2Context::create();
 
@@ -380,7 +424,7 @@ int main(int argc, char *argv[]) {
     // std::cin >> cmd;
     // 读取整行
     // std::getline(std::cin, cmd);
-    cmd = "info 111";
+    cmd = "push /home/wangbin/Readme.md Readme";
 
     auto cmd_params = split_by_space(cmd);
     std::cout << "do:  " << cmd << std::endl;
@@ -391,9 +435,14 @@ int main(int argc, char *argv[]) {
         path = cmd_params[1];
       }
       show_dir(path);
-    }
-    if (cmd_params[0] == "info") {
-      if (cmd_params.size() < 1) {
+    } else if (cmd_params[0] == "push") {
+      if (cmd_params.size() < 3) {
+        std::cout << "failed, please input path or name\n";
+        continue;
+      }
+      push(cmd_params[1], cmd_params[2]);
+    } else if (cmd_params[0] == "info") {
+      if (cmd_params.size() < 2) {
         std::cout << "failed, please input path or name\n";
         continue;
       }
@@ -410,7 +459,7 @@ int main(int argc, char *argv[]) {
       smb2->smb2_disconnect_share();
       /* 概率出现 failed to get share list Error : smb2_list_shares:
          IOCTL:DCE_OP_SHARE_ENUM Failed : smb2_ioctl: receivePdus: No matching
-         PDU found 
+         PDU found
          应该是前面smb2_connect_share的问题
       */
       print_sharelist();
