@@ -5,18 +5,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 
 #include "smb2.h"
+#include "util.h"
 
 int usage(void)
 {
   fprintf(stderr, "Usage:\n"
-          "smb2-statvfs-sync <smb2-url>\n\n"
-          "URL format: "
-          "smb://[<domain;][<username>@]<host>/<share>/<path>\n");
+                  "smb2-statvfs-sync <smb2-url>\n\n"
+                  "URL format: "
+                  "smb://[<domain;][<username>@]<host>/<share>/<path>\n");
   exit(1);
 }
 
@@ -47,13 +49,13 @@ int main(int argc, char *argv[])
   }
 
   smb2->smb2SetSecurityMode(SMB2_NEGOTIATE_SIGNING_ENABLED);
-  if (smb2_connect_share(smb2, url->server, url->share, url->user, err) != 0)
+  if (smb2->smb2_connect_share(url->server, url->share, url->user, err) != 0)
   {
     printf("smb2_connect_share failed. %s\n", err.c_str());
     exit(10);
   }
 
-  if (smb2_statvfs(smb2, url->path, &vfs, err) < 0)
+  if (smb2->smb2_statvfs(url->path, &vfs, err) < 0)
   {
     printf("smb2_statvfs failed. %s\n", err.c_str());
     exit(10);
@@ -63,7 +65,7 @@ int main(int argc, char *argv[])
   printf("Free:%"PRIu64"\n", vfs.f_bfree);
   printf("Avail:%"PRIu64"\n", vfs.f_bavail);
 
-  smb2_disconnect_share(smb2);
+  smb2->smb2_disconnect_share();
   smb2_destroy_url(url);
 
   return 0;

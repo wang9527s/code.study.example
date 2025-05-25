@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <inttypes.h>
 #include <poll.h>
 #include <sstream>
@@ -7,6 +8,7 @@
 #include <string.h>
 #include <string>
 #include <time.h>
+#include <unistd.h>
 
 #include "smb2.h"
 #include "util.h"
@@ -42,6 +44,7 @@ void usage(void) {
   fprintf(stderr,
           "Usage:\n"
           "    l [path]   show files in optional path (default is root)\n"
+          "    cat <pathname>   printf files\n"
           "    q          exit program\n"
           "    h          print usage\n"
           "\n");
@@ -88,6 +91,30 @@ void show_dir(std::string query_path) {
   smb2->smb2_closedir(dir);
 }
 
+void prinf_file(std::string path) {
+  smb2fh *fh = smb2->smb2_open(path, O_RDONLY, err);
+  if (fh == NULL) {
+    printf("smb2_open failed. %s\n", err.c_str());
+    return;
+  }
+  uint8_t buf[256 * 1024];
+  uint32_t pos = 0;
+
+  uint32_t status = 0;
+  while ((status = smb2->smb2_pread(fh, buf, 1024, pos, err)) !=
+         SMB2_STATUS_END_OF_FILE) {
+    write(0, buf, fh->byte_count);
+    pos += fh->byte_count;
+  }
+  // EOF might have returned some data
+  if (fh->byte_count) {
+    write(0, buf, fh->byte_count);
+    pos += fh->byte_count;
+  }
+
+  smb2->smb2_close(fh, err);
+}
+
 int main(int argc, char *argv[]) {
   smb2 = Smb2Context::create();
 
@@ -106,7 +133,6 @@ int main(int argc, char *argv[]) {
 
   usage();
   while (true) {
-
     std::string cmd;
 
     // std::cin 从标准输入读取一个“单词”，遇到空格、Tab 或换行符
@@ -123,6 +149,13 @@ int main(int argc, char *argv[]) {
         path = cmd_params[1];
       }
       show_dir(path);
+    } else if (cmd_params[0] == "cat") {
+      if (cmd_params.size() < 2) {
+        std::cout << "failed, please input filename\n";
+        continue;
+      }
+      std::string pathname = cmd_params[1];
+      prinf_file(pathname);
     } else if (cmd == "q") {
       break;
     } else if (cmd == "h") {

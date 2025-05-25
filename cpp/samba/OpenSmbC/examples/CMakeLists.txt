@@ -2,20 +2,12 @@ find_library(POPT_LIBRARY popt)
 
 list(APPEND CORE_LIBRARIES ${POPT_LIBRARY})
 
-set(SOURCES smb2-cat
-            smb2-ex
-            smb2-ftruncate
-            smb2-ls
-            smb2-put
-            smb2-stat
-            smb2-stat-all
-            smb2-truncate
-            smb2-sharelist
-            smb2-lookupsid
-            smb2-getsd)
-
-foreach(TARGET ${SOURCES})
+file(GLOB_RECURSE UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp")
+foreach(File IN LISTS UNIT_TESTS)
+  # 移除target的后缀
+  string(REGEX REPLACE "\\.cpp$" "" TARGET "${File}")
   add_executable(${TARGET} ${TARGET}.cpp)
+  
   target_link_libraries(${TARGET} ${CORE_LIBRARIES})
   target_link_libraries(${TARGET} OpenSmbC gssapi_krb5 krb5)
   link_directories("${CMAKE_BINARY_DIR}/lib")
