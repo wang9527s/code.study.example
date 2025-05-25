@@ -39,12 +39,14 @@ struct ex_params {
 
 std::string err;
 Smb2ContextPtr smb2;
+ex_params params;
 
 void usage(void) {
   fprintf(stderr,
           "Usage:\n"
           "    l [path]   show files in optional path (default is root)\n"
           "    cat <pathname>   printf files\n"
+          "    sl         show remote shared list\n"
           "    q          exit program\n"
           "    h          print usage\n"
           "\n");
@@ -115,10 +117,31 @@ void prinf_file(std::string path) {
   smb2->smb2_close(fh, err);
 }
 
+void print_sharelist() {
+  smb2_shares shares;
+  if (smb2->smb2_list_shares(params.url.server,
+                             params.url.user,
+                             2, /*query share info type*/
+                             shares, err) < 0)
+  {
+    printf("failed to get share list Error : %s\n", err.c_str());
+    return ;
+  }
+
+  for(smb2_shareinfo entry : shares.sharelist)
+  {
+    if (shares.share_info_type == 1) {
+      printf("    [name]: %-20s [type]: %-11x\n", entry.name.c_str(), entry.share_type);
+    }
+    else if (shares.share_info_type == 2){
+      printf("    [name]: %-20s [type]:%-11x [path]:%-100s\n", entry.name.c_str(), entry.share_type, entry.path.c_str());
+    }
+  }
+}
+
 int main(int argc, char *argv[]) {
   smb2 = Smb2Context::create();
 
-  ex_params params;
   smb2->smb2SetUser(params.url.user);
   smb2->smb2SetPassword(params.password);
   smb2->smb2SetDomain(params.url.domain);
@@ -132,16 +155,17 @@ int main(int argc, char *argv[]) {
   }
 
   usage();
-  while (true) {
-    std::string cmd;
+  do {
+    std::string cmd = "";
 
     // std::cin 从标准输入读取一个“单词”，遇到空格、Tab 或换行符
     // std::cin >> cmd;
     // 读取整行
-    std::getline(std::cin, cmd);
+    // std::getline(std::cin, cmd);
+    cmd = "sl";
 
     auto cmd_params = split_by_space(cmd);
-    std::cout << "[input:] " << cmd << std::endl;
+    std::cout << "do:  " << cmd << std::endl;
     if (cmd_params[0] == "l") {
       // 路径必须已存在的dir
       std::string path = "";
@@ -156,6 +180,11 @@ int main(int argc, char *argv[]) {
       }
       std::string pathname = cmd_params[1];
       prinf_file(pathname);
+    } else if (cmd == "sl") {
+      smb2->smb2_disconnect_share();
+      // 概率出现 failed to get share list Error : smb2_list_shares: IOCTL: DCE_OP_SHARE_ENUM Failed : smb2_ioctl: receivePdus: No matching PDU found
+      // 应该是前面smb2_connect_share的问题
+      print_sharelist();
     } else if (cmd == "q") {
       break;
     } else if (cmd == "h") {
@@ -164,7 +193,7 @@ int main(int argc, char *argv[]) {
       std::cout << "param failed, continue\n";
     }
     printf("\n");
-  }
+  } while (false);
 
   smb2->smb2_disconnect_share();
 
