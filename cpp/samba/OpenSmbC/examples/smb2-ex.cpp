@@ -46,6 +46,7 @@ void usage(void) {
           "Usage:\n"
           "    l [path]   show files in optional path (default is root)\n"
           "    cat <pathname>   printf files\n"
+          "    info <pathname>   printf file infos\n"
           "    sl         show remote shared list\n"
           "    q          exit program\n"
           "    h          print usage\n"
@@ -119,23 +120,240 @@ void prinf_file(std::string path) {
 
 void print_sharelist() {
   smb2_shares shares;
-  if (smb2->smb2_list_shares(params.url.server,
-                             params.url.user,
+  if (smb2->smb2_list_shares(params.url.server, params.url.user,
                              2, /*query share info type*/
-                             shares, err) < 0)
-  {
+                             shares, err) < 0) {
     printf("failed to get share list Error : %s\n", err.c_str());
-    return ;
+    return;
   }
 
-  for(smb2_shareinfo entry : shares.sharelist)
-  {
+  for (smb2_shareinfo entry : shares.sharelist) {
     if (shares.share_info_type == 1) {
-      printf("    [name]: %-20s [type]: %-11x\n", entry.name.c_str(), entry.share_type);
+      printf("    [name]: %-20s [type]: %-11x\n", entry.name.c_str(),
+             entry.share_type);
+    } else if (shares.share_info_type == 2) {
+      printf("    [name]: %-20s [type]:%-11x [path]:%-100s\n",
+             entry.name.c_str(), entry.share_type, entry.path.c_str());
     }
-    else if (shares.share_info_type == 2){
-      printf("    [name]: %-20s [type]:%-11x [path]:%-100s\n", entry.name.c_str(), entry.share_type, entry.path.c_str());
+  }
+}
+
+void show_info(std::string path) {
+  time_t t;
+  printf("\n ---------- \n stat_all: \n");
+  {
+    struct smb2_file_info_all fs;
+    if (smb2->smb2_getinfo_all(path, &fs, err) != 0) {
+      printf("failed waiting for a reply. %s\n", err.c_str());
+      exit(10);
     }
+
+    /* Print the file_all_info structure */
+    printf("Attributes: ");
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_READONLY) {
+      printf("READONLY ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_HIDDEN) {
+      printf("HIDDEN ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_SYSTEM) {
+      printf("SYSTEM ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_DIRECTORY) {
+      printf("DIRECTORY ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_ARCHIVE) {
+      printf("ARCHIVE ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_NORMAL) {
+      printf("NORMAL ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_TEMPORARY) {
+      printf("TMP ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_SPARSE_FILE) {
+      printf("SPARSE ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_REPARSE_POINT) {
+      printf("REPARSE ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_COMPRESSED) {
+      printf("COMPRESSED ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_OFFLINE) {
+      printf("OFFLINE ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_NOT_CONTENT_INDEXED) {
+      printf("NOT_CONTENT_INDEXED ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_ENCRYPTED) {
+      printf("ENCRYPTED ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_INTEGRITY_STREAM) {
+      printf("INTEGRITY_STREAM ");
+    }
+    if (fs.file_attributes & SMB2_FILE_ATTRIBUTE_NO_SCRUB_DATA) {
+      printf("NO_SCRUB_DATA ");
+    }
+    printf("\n");
+
+    t = SMBTimeToUTime(fs.smb2_crtime);
+    printf("Creation Time:    %s", asctime(localtime(&t)));
+    t = SMBTimeToUTime(fs.smb2_atime);
+    printf("Last Access Time: %s", asctime(localtime(&t)));
+    t = SMBTimeToUTime(fs.smb2_mtime);
+    printf("Last Write Time:  %s", asctime(localtime(&t)));
+    t = SMBTimeToUTime(fs.smb2_ctime);
+    printf("Change Time:      %s", asctime(localtime(&t)));
+
+    printf("Allocation Size: %" PRIu64 "\n", fs.allocation_size);
+    printf("End Of File:     %" PRIu64 "\n", fs.end_of_file);
+    printf("Number Of Links: %d\n", fs.smb2_nlink);
+    printf("Delete Pending:  %s\n", fs.delete_pending ? "YES" : "NO");
+    printf("Directory:       %s\n", fs.directory ? "YES" : "NO");
+
+    printf("Inode Number: 0x%016" PRIx64 "\n", fs.smb2_ino);
+    printf("EA Size : %d\n", fs.ea_size);
+
+    printf("Access Flags: ");
+    if (fs.directory) {
+      if (fs.access_flags & SMB2_FILE_LIST_DIRECTORY) {
+        printf("LIST_DIRECTORY ");
+      }
+      if (fs.access_flags & SMB2_FILE_ADD_FILE) {
+        printf("ADD_FILE ");
+      }
+      if (fs.access_flags & SMB2_FILE_ADD_SUBDIRECTORY) {
+        printf("ADD_SUBDIRECTORY ");
+      }
+      if (fs.access_flags & SMB2_FILE_TRAVERSE) {
+        printf("TRAVERSE ");
+      }
+    } else {
+      if (fs.access_flags & SMB2_FILE_READ_DATA) {
+        printf("READ_DATA ");
+      }
+      if (fs.access_flags & SMB2_FILE_WRITE_DATA) {
+        printf("WRITE_DATA ");
+      }
+      if (fs.access_flags & SMB2_FILE_APPEND_DATA) {
+        printf("APPEND_DATA ");
+      }
+      if (fs.access_flags & SMB2_FILE_EXECUTE) {
+        printf("FILE_EXECUTE ");
+      }
+    }
+    if (fs.access_flags & SMB2_FILE_READ_EA) {
+      printf("READ_EA ");
+    }
+    if (fs.access_flags & SMB2_FILE_WRITE_EA) {
+      printf("WRITE_EA ");
+    }
+    if (fs.access_flags & SMB2_FILE_READ_ATTRIBUTES) {
+      printf("READ_ATTRIBUTES ");
+    }
+    if (fs.access_flags & SMB2_FILE_WRITE_ATTRIBUTES) {
+      printf("WRITE_ATTRIBUTES ");
+    }
+    if (fs.access_flags & SMB2_FILE_DELETE_CHILD) {
+      printf("DELETE_CHILD ");
+    }
+    if (fs.access_flags & SMB2_DELETE) {
+      printf("DELETE ");
+    }
+    if (fs.access_flags & SMB2_READ_CONTROL) {
+      printf("READ_CONTROL ");
+    }
+    if (fs.access_flags & SMB2_WRITE_DACL) {
+      printf("WRITE_DACL ");
+    }
+    if (fs.access_flags & SMB2_WRITE_OWNER) {
+      printf("WRITE_OWNER ");
+    }
+    if (fs.access_flags & SMB2_SYNCHRONIZE) {
+      printf("SYNCHRONIZE ");
+    }
+    if (fs.access_flags & SMB2_ACCESS_SYSTEM_SECURITY) {
+      printf("ACCESS_SYSTEM_SECURITY ");
+    }
+    if (fs.access_flags & SMB2_MAXIMUM_ALLOWED) {
+      printf("MAXIMUM_ALLOWED ");
+    }
+    if (fs.access_flags & SMB2_GENERIC_ALL) {
+      printf("GENERIC_ALL ");
+    }
+    if (fs.access_flags & SMB2_GENERIC_EXECUTE) {
+      printf("GENERIC_EXECUTE ");
+    }
+    if (fs.access_flags & SMB2_GENERIC_WRITE) {
+      printf("GENERIC_WRITE ");
+    }
+    if (fs.access_flags & SMB2_GENERIC_READ) {
+      printf("GENERIC_READ ");
+    }
+    printf("\n");
+
+    printf("Mode: ");
+    if (fs.access_flags & SMB2_FILE_WRITE_THROUGH) {
+      printf("WRITE_THROUGH ");
+    }
+    if (fs.access_flags & SMB2_FILE_SEQUENTIAL_ONLY) {
+      printf("SEQUENTIAL_ONLY ");
+    }
+    if (fs.access_flags & SMB2_FILE_NO_INTERMEDIATE_BUFFERING) {
+      printf("NO_INTERMEDIATE_BUFFERING ");
+    }
+    if (fs.access_flags & SMB2_FILE_SYNCHRONOUS_IO_ALERT) {
+      printf("SYNCHRONOUS_IO_ALERT ");
+    }
+    if (fs.access_flags & SMB2_FILE_SYNCHRONOUS_IO_NONALERT) {
+      printf("SYNCHRONOUS_IO_NONALERT ");
+    }
+    if (fs.access_flags & SMB2_FILE_DELETE_ON_CLOSE) {
+      printf("DELETE_ON_CLOSE ");
+    }
+    printf("\n");
+  }
+  printf("\n ---------- \n stat: \n");
+  {
+    struct smb2_stat_64 st;
+    if (smb2->smb2_stat(path, &st, err) < 0) {
+      printf("smb2_stat failed. %s\n", err.c_str());
+      return;
+    }
+
+    switch (st.smb2_type) {
+    case SMB2_TYPE_FILE:
+      printf("Type:FILE\n");
+      break;
+    case SMB2_TYPE_DIRECTORY:
+      printf("Type:DIRECTORY\n");
+      break;
+    default:
+      printf("Type:unknown\n");
+      break;
+    }
+    printf("Size:%" PRIu64 "\n", st.smb2_size);
+    printf("Inode:0x%" PRIx64 "\n", st.smb2_ino);
+    printf("Links:%" PRIu32 "\n", st.smb2_nlink);
+    t = SMBTimeToUTime(st.smb2_atime);
+    printf("Atime:%s", asctime(localtime(&t)));
+    t = SMBTimeToUTime(st.smb2_mtime);
+    printf("Mtime:%s", asctime(localtime(&t)));
+    t = SMBTimeToUTime(st.smb2_ctime);
+    printf("Ctime:%s", asctime(localtime(&t)));
+  }
+  printf("\n ---------- \n vfs: \n");
+  {
+    struct smb2_statvfs vfs;
+    if (smb2->smb2_statvfs(path, &vfs, err) < 0) {
+      printf("smb2_statvfs failed. %s\n", err.c_str());
+      return;
+    }
+    printf("Blocksize:%d\n", vfs.f_bsize);
+    printf("Blocks:%" PRIu64 "\n", vfs.f_blocks);
+    printf("Free:%" PRIu64 "\n", vfs.f_bfree);
+    printf("Avail:%" PRIu64 "\n", vfs.f_bavail);
   }
 }
 
@@ -162,7 +380,7 @@ int main(int argc, char *argv[]) {
     // std::cin >> cmd;
     // 读取整行
     // std::getline(std::cin, cmd);
-    cmd = "sl";
+    cmd = "info 111";
 
     auto cmd_params = split_by_space(cmd);
     std::cout << "do:  " << cmd << std::endl;
@@ -173,6 +391,14 @@ int main(int argc, char *argv[]) {
         path = cmd_params[1];
       }
       show_dir(path);
+    }
+    if (cmd_params[0] == "info") {
+      if (cmd_params.size() < 1) {
+        std::cout << "failed, please input path or name\n";
+        continue;
+      }
+      std::string path = cmd_params[1];
+      show_info(path);
     } else if (cmd_params[0] == "cat") {
       if (cmd_params.size() < 2) {
         std::cout << "failed, please input filename\n";
@@ -182,8 +408,11 @@ int main(int argc, char *argv[]) {
       prinf_file(pathname);
     } else if (cmd == "sl") {
       smb2->smb2_disconnect_share();
-      // 概率出现 failed to get share list Error : smb2_list_shares: IOCTL: DCE_OP_SHARE_ENUM Failed : smb2_ioctl: receivePdus: No matching PDU found
-      // 应该是前面smb2_connect_share的问题
+      /* 概率出现 failed to get share list Error : smb2_list_shares:
+         IOCTL:DCE_OP_SHARE_ENUM Failed : smb2_ioctl: receivePdus: No matching
+         PDU found 
+         应该是前面smb2_connect_share的问题
+      */
       print_sharelist();
     } else if (cmd == "q") {
       break;
@@ -193,6 +422,7 @@ int main(int argc, char *argv[]) {
       std::cout << "param failed, continue\n";
     }
     printf("\n");
+
   } while (false);
 
   smb2->smb2_disconnect_share();
