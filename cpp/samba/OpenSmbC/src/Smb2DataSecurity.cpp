@@ -12,6 +12,7 @@
 
 #include "Smb2FileData.h"
 #include "Stringf.h"
+#include "Endian.h"
 
 #define FUNC stringf("%s: ", __func__)
 

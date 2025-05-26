@@ -6,8 +6,9 @@ option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(ENABLE_EXAMPLES "Build example programs" ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -O2 -fshort-wchar -Werror -Wno-unused-but-set-variable -Wno-strict-aliasing -Wno-narrowing -Wno-literal-suffix")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -O2 -fshort-wchar -Werror -Wno-unused-but-set-variable -Wno-strict-aliasing -Wno-narrowing")
 
+add_compile_options(-w)
 add_compile_options(-Wno-error=deprecated-declarations)
 add_compile_options(-Wno-error=address-of-packed-member)
 
@@ -22,6 +23,10 @@ set(ARCH ${MARCH}-${OS})
 
 message("Build Architecture = " ${ARCH})
 
+if(APPLE)
+  include_directories(/opt/homebrew/opt/krb5/include)
+  link_directories(/opt/homebrew/opt/krb5/lib)
+endif()
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
 # check for the gssapi libraries and headers

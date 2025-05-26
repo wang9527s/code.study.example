@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # sudo apt install make g++ libssl-dev libpopt-dev libkrb5-dev
+# brew install krb5
 
 set -e
 

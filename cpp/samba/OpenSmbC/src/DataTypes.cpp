@@ -1,4 +1,5 @@
 #include "DataTypes.h"
+#include "Endian.h"
 #include "PrivateData.h"
 #include <string.h>
 

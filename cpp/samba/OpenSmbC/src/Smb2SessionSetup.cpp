@@ -7,6 +7,7 @@
 #include "Smb2TreeConnect.h"
 #include "Krb5AuthProvider.h"
 #include "NtlmAuthProvider.h"
+#include "Endian.h"
 
 /* strings used to derive SMB signing and encryption keys */
 static const char SMB2AESCMAC[] = "SMB2AESCMAC";

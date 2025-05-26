@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include "Smb2FileData.h"
+#include "Endian.h"
 
 int
 smb2_decode_file_basic_info(struct smb2_file_basic_info *fs, smb2_iovec *vec)

@@ -17,6 +17,7 @@
 #include "Smb2Pdu.h"
 #include "Smb2Context.h"
 #include "Stringf.h"
+#include "Endian.h"
 
 using namespace std;
 

@@ -14,6 +14,7 @@
 #include "Stringf.h"
 #include "smb2.h"
 #include "PrivateData.h"
+#include "Endian.h"
 
 #define MAX_URL_SIZE 256
 
