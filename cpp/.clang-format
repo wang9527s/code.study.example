@@ -13,8 +13,9 @@ IndentCaseLabels: false                    # 不缩进 case 标签
 ConstructorInitializerIndentWidth: 4       # 构造函数初始化列表的缩进宽度为 4
 
 # 行宽和换行
-ColumnLimit: 120                           # 每行最多 130 个字符
+ColumnLimit: 130                           # 每行最多 130 个字符
 MaxEmptyLinesToKeep: 1                     # 最多保留 1 个空行
+AlwaysBreakTemplateDeclarations: Yes       # 模板 > 后强制换行
 
 # 空格和 Tab
 UseTab: Never                              # 不使用 Tab，使用空格
@@ -35,11 +36,11 @@ SpaceBeforeCpp11BracedList: true           # C++11 大括号列表前加空格
 PointerAlignment: Right                    # 指针和引用右对齐
 
 # 函数和参数格式化
-AllowShortFunctionsOnASingleLine: Empty    # 只有空函数可以放在同一行
+AllowShortFunctionsOnASingleLine: Inline   # 类内短函数可以放在同一行（Empty，只有空函数可以放在同一行）
 AllowShortIfStatementsOnASingleLine: false # 不允许短的 if 语句放在同一行
 AllowShortLoopsOnASingleLine: false        # 不允许短的循环放在同一行
-BinPackArguments: false                    # 函数实参要么都在同一行，要么都各自一行
-BinPackParameters: false                   # 函数形参要么都在同一行，要么都各自一行
+BinPackArguments: true                     # 函数实参尽量压缩到一行（false：函数实参要么都在同一行，要么都各自一行）
+BinPackParameters: true                    # 函数形参尽量压缩到一行
 BreakConstructorInitializers: BeforeColon  # 在构造函数的初始化列表的冒号前换行
 BreakConstructorInitializersBeforeComma: true # 在构造函数的初始化列表的逗号前换行
 BreakBeforeBinaryOperators: All            # 在所有二元操作符前换行

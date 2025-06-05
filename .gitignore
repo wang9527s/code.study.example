@@ -2,7 +2,9 @@
 **/build/*
 **/*build/*
 **/build-*/
+/build-*/
 **/.vscode/*
 
-/build-*/
 *.user
+**/*.log
+**/*.bak/*
