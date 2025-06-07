@@ -80,3 +80,24 @@ int main() {
     return 0;
 }
 ```
+
+### 日志等级
+
+**如何做到release程序不输出debug日志？ **
+
++ 通过宏
+
+主流日志库（如 spdlog、glog、Boost.Log）均内置日志级别控制，在代码中设置日志级别，然后日志库中判断，不符合要求的日志不输出，从而控制release不输出debug日志
+
+```cpp
+#ifdef NDEBUG
+    spdlog::set_level(spdlog::level::info);  // Release 只输出 INFO 及以上
+#else
+    spdlog::set_level(spdlog::level::debug); // Debug 输出所有日志
+#endif
+```
+
++ 环境变量/配置文件
+
+程序启动的时候，读取环境变量/日志文件，从而控制日志的输出级别。  
+这样可以在不变更程序的情况下动态调整日志级别。
