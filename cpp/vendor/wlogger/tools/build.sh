@@ -6,6 +6,6 @@ cd build
 
 cmake ../../example \
   -DCMAKE_CXX_COMPILER=g++-13 \
-  -DCMAKE_BUILD_TYPE=Debug
+  -DCMAKE_BUILD_TYPE=Release
 
 make -j$(nproc)

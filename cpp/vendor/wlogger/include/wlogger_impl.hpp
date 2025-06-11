@@ -64,7 +64,20 @@ private:
             return;
 
         for (const auto &msg : _MsgBuffer) {
-            std::string msg_format = msg.format(config.showFullPath, config.showThread);
+            static TimeUse t("msg.format");
+            static TimeUse t2("onemsg ");
+            static int count = 0;
+            ++count;
+            if (count % 100 == 0) {
+                t.start();
+                t2.start();
+            }
+            std::string msg_format = msg.format_str(config.showFullPath, config.showThread);
+            if (count % 100 == 0) {
+                t.end();
+            }
+
+            LoggerData::total_msg_count++;
             if (config.fileOutput) {
                 // 在_fileBuffer后进行append
                 std::format_to(std::back_inserter(_fileBuffer), "{}\n", msg_format);
@@ -78,6 +91,14 @@ private:
                 else {
                     std::format_to(std::back_inserter(_consoleBuffer), "{}\n", msg_format);
                 }
+            }
+            if (count % 100 == 0) {
+                t2.end();
+            }
+            if (count % 8000 == 0) {
+                // print 需要在统计之后
+                t.print();
+                t2.print();
             }
         }
 

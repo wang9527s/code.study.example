@@ -35,6 +35,46 @@ std::string format_size_kb_mb(size_t bytes)
     return std::to_string(bytes) + unit;
 }
 
+class TimeUse
+{
+    std::string _tag;
+
+public:
+    TimeUse(std::string tag)
+        : total_duration_ns(0)
+        , _tag(tag)
+        , count(0)
+        , current_duration_ns(0)
+    {
+    }
+
+    void start() { start_time = std::chrono::system_clock::now(); }
+
+    void end()
+    {
+        auto end_time = std::chrono::system_clock::now();
+        current_duration_ns
+            = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count();
+        total_duration_ns += current_duration_ns;
+        ++count;
+    }
+
+    void print() const
+    {
+        double avg_ns = static_cast<double>(total_duration_ns) / count;
+        double msgs_per_sec = 1'000'000'000.0 / avg_ns;
+
+        std::cout << std::format("{} :  avg: {:.2f} ns/msg, {:.2f} msgs/s\n", _tag, avg_ns,
+                                 msgs_per_sec);
+    }
+
+private:
+    std::chrono::time_point<std::chrono::system_clock> start_time;
+    long long current_duration_ns;
+    long long total_duration_ns;
+    int count;
+};
+
 namespace wlogger {
 
 class RingBuffer;
@@ -42,6 +82,8 @@ struct LoggerData {
     static RingBuffer buffer;
     inline static constexpr size_t Msg_Buffer_Size = 4096;
     inline static constexpr size_t Range_Buffer_Size = 1 << 17; // 2^17 = 131,072
+
+    inline static size_t total_msg_count = 0;
 };
 
 enum class Level { TRACE, DEBUG, INFO, WARNING, ERROR, FATAL };
@@ -162,16 +204,22 @@ struct alignas(64) LogMessage {
 
     ~LogMessage() = default;
 
-    std::string format(bool showFullPath, bool showThread) const
+    std::string format_str(bool showFullPath, bool showThread) const
     {
         const auto &level_str = LEVEL_STRINGS[static_cast<size_t>(level)];
+        std::string file(context.file);
+        if (!showFullPath) [[likely]] {
+            if (auto pos = file.find_last_of("/\\"); pos != std::string_view::npos) [[likely]] {
+                file = file.substr(pos + 1);
+            }
+        }
         if (showThread) {
-            return std::format("[{}] [{}] [{}] [{}] [{}] {}", formatTime(), level_str,
-                               context.threadName, context.tag, srcLocation(showFullPath), message);
+            return std::format("[{}] [{}] [{}] [{}] [{}:{}] {}", formatTime(), level_str,
+                               context.threadName, context.tag, file, context.line, message);
         }
         else {
-            return std::format("[{}] [{}] [{}] [{}] {}", formatTime(), level_str, context.tag,
-                               srcLocation(showFullPath), message);
+            return std::format("[{}] [{}] [{}] [{}:{}] {}", formatTime(), level_str, context.tag,
+                               file, context.line, message);
         }
 
         return "";
@@ -180,21 +228,13 @@ struct alignas(64) LogMessage {
 private:
     std::string formatTime() const
     {
-        auto tp_sec = time_point_cast<std::chrono::seconds>(timestamp);
-        auto ms = duration_cast<std::chrono::milliseconds>(timestamp.time_since_epoch()) % 1000;
-        return std::format("{:%Y-%m-%d %H:%M:%S}.{:03}", tp_sec, ms.count());
-    }
+        // 单次获取毫秒计数（最快方式）
+        const auto ms_since_epoch
+            = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp.time_since_epoch());
+        const auto sec_part = std::chrono::floor<std::chrono::seconds>(timestamp);
 
-    std::string srcLocation(bool showFullPath) const
-    {
-        std::string file(context.file);
-        if (!showFullPath)
-            [[likely]]
-            {
-                if (auto pos = file.find_last_of("/\\"); pos != std::string_view::npos)
-                    [[likely]] { file = file.substr(pos + 1); }
-            }
-        return std::format("{}:{}", file, context.line);
+        // 直接格式化（编译器会优化为最佳指令）
+        return std::format("{:%Y-%m-%d %H:%M:%S}.{:03d}", sec_part, ms_since_epoch.count() % 1000);
     }
 };
 
