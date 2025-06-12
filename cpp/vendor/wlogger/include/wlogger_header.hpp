@@ -2,12 +2,10 @@
 
 #include <array>
 #include <atomic>
-#include <chrono>
-#include <format>
-#include <string>
-#include <string_view>
 #include <thread>
 #include <vector>
+
+#include "wlogger_helper.hpp"
 
 #ifndef LOG_TAG
 #define LOG_TAG "Default"
@@ -128,17 +126,13 @@ struct Config {
 // log context information
 struct Context {
     std::string tag;
-    std::string function;
-    std::string file;
-    int line;
     std::string threadName;
+    std::source_location _loc;
 
     Context(std::string stag = LOG_TAG,
             const std::source_location &loc = std::source_location::current())
         : tag(stag)
-        , function(loc.function_name())
-        , file(loc.file_name())
-        , line(loc.line())
+        , _loc(loc)
         , threadName(currentThreadName)
     {
         init();
@@ -207,35 +201,41 @@ struct alignas(64) LogMessage {
     std::string format_str(bool showFullPath, bool showThread) const
     {
         const auto &level_str = LEVEL_STRINGS[static_cast<size_t>(level)];
-        std::string file(context.file);
+        std::string file(context._loc.file_name());
         if (!showFullPath) [[likely]] {
             if (auto pos = file.find_last_of("/\\"); pos != std::string_view::npos) [[likely]] {
                 file = file.substr(pos + 1);
             }
         }
         if (showThread) {
-            return std::format("[{}] [{}] [{}] [{}] [{}:{}] {}", formatTime(), level_str,
-                               context.threadName, context.tag, file, context.line, message);
+            return std::format("[{}] [{}] [{}] [{}] [{}:{}] {}", g_time_format.format(timestamp),
+                               level_str, context.threadName, context.tag, file,
+                               context._loc.line(), message);
         }
         else {
-            return std::format("[{}] [{}] [{}] [{}:{}] {}", formatTime(), level_str, context.tag,
-                               file, context.line, message);
+            return std::format("[{}] [{}] [{}] [{}:{}] {}", g_time_format.format(timestamp),
+                               level_str, context.tag, file, context._loc.line(), message);
         }
 
         return "";
     }
 
 private:
-    std::string formatTime() const
-    {
-        // 单次获取毫秒计数（最快方式）
-        const auto ms_since_epoch
-            = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp.time_since_epoch());
-        const auto sec_part = std::chrono::floor<std::chrono::seconds>(timestamp);
+    /*
+        // 取消此函数，放到format_str中，大概有50ns的提升（因该是少一次format的新能提升）
+        std::string formatTime() const
+        {
+            // 单次获取毫秒计数（最快方式）
+            const auto ms_since_epoch
+                =
+       std::chrono::duration_cast<std::chrono::milliseconds>(timestamp.time_since_epoch()); const
+       auto sec_part = std::chrono::floor<std::chrono::seconds>(timestamp);
 
-        // 直接格式化（编译器会优化为最佳指令）
-        return std::format("{:%Y-%m-%d %H:%M:%S}.{:03d}", sec_part, ms_since_epoch.count() % 1000);
-    }
+            // 此行大概有 200ns的耗时
+            return std::format("{:%Y-%m-%d %H:%M:%S}.{:03d}", sec_part, ms_since_epoch.count() %
+       1000);
+        }
+    */
 };
 
 struct alignas(64) RingBuffer {

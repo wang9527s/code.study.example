@@ -15,7 +15,7 @@ void press(int th_count, int test_s = 10)
     auto th_run = [=](std::stop_token stoken) {
         int counter = 0;
         while (!stoken.stop_requested()) {
-            LOG_WARNING("     String: {} {}", "hello", ++counter);
+            LOG_WARNING("     String: {} {}", "中文 hello", ++counter);
         }
     };
     for (int i = 0; i < th_count; i++) {
@@ -54,7 +54,7 @@ int main()
     config.showFullPath = false;
     Logger::initialize(config);
 
-    press(1, 8);
+    press(1, 5);
 
     return EXIT_SUCCESS;
 }
