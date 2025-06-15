@@ -53,6 +53,7 @@ int main()
     press(5);
     press(8);
     press(10);
+    press(16);
 
     return EXIT_SUCCESS;
 }

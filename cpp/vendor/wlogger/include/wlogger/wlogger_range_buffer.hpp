@@ -191,21 +191,23 @@ struct alignas(64) RingBuffer {
     alignas(64) std::array<LogMessage, LoggerData::Range_Buffer_Size> messages;
     alignas(64) std::atomic<size_t> head {0};
     alignas(64) std::atomic<size_t> tail {0};
+    std::mutex _mutex;
 
     bool push(LogMessage &&msg)
     {
-        size_t current_tail = tail.load(std::memory_order_relaxed);
-        size_t next_tail = (current_tail + 1) & (LoggerData::Range_Buffer_Size - 1);
+        size_t current_tail;
+        size_t next_tail;
 
-        if (next_tail == head.load(std::memory_order_acquire)) {
-            LoggerData::perf.push_failed_count_buffer_is_full++;
-            return false;
-        }
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            size_t current_tail = tail.load(std::memory_order_relaxed);
+            size_t next_tail = (current_tail + 1) & (LoggerData::Range_Buffer_Size - 1);
 
-        if (!tail.compare_exchange_weak(current_tail, next_tail, std::memory_order_acquire,
-                                        std::memory_order_relaxed)) {
-            LoggerData::perf.push_failed_count++;
-            return false;
+            if (next_tail == head.load(std::memory_order_acquire)) {
+                LoggerData::perf.err_count[PerlData::push_buff_is_full]++;
+                return false;
+            }
+            tail.store(next_tail, std::memory_order_relaxed);
         }
 
         new (&messages[current_tail]) LogMessage(std::move(msg));
@@ -216,7 +218,7 @@ struct alignas(64) RingBuffer {
     {
         auto current_head = head.load(std::memory_order_relaxed);
         if (current_head == tail.load(std::memory_order_acquire)) {
-            LoggerData::perf.pop_failed_count++;
+            LoggerData::perf.err_count[PerlData::pop_buff_is_empty]++;
             return false;
         }
 
