@@ -8,7 +8,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 
-include_directories(..)
+include_directories(../include)
 
 file(GLOB_RECURSE UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp")
 foreach(File IN LISTS UNIT_TESTS)

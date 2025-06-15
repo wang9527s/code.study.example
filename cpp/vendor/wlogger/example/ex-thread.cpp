@@ -1,45 +1,40 @@
 #include <filesystem>
 #include <random>
-#include "include/wlogger.hpp"
+#include "wlogger/wlogger.hpp"
 
 using namespace wtool;
 using namespace wtool::wlogger;
 using namespace std::chrono;
 
-void press(int th_count, int test_s = 10)
+void press(int th_count)
 {
-    LoggerData::total_msg_count = 0;
-    std::cout << "\n--------------------------------------------\n";
+    std::this_thread::sleep_for(seconds(2));
+    std::cout << std::format("\n------------ producer Th count :{}--------------\n", th_count);
+
+    LoggerData::perf.clear();
     auto start = system_clock::now();
     std::vector<std::jthread> ths;
-    auto th_run = [=](std::stop_token stoken) {
-        int counter = 0;
-        while (!stoken.stop_requested()) {
-            LOG_WARNING("     String: {} {}", "中文 hello", ++counter);
-        }
+    std::atomic<int> counter = 0;
+    auto th_run = [&](std::stop_token stoken) {
+        int count = 0;
+        do {
+            counter.fetch_add(1);
+            count = counter.load();
+            LOG_INFO("     String: {} {}", "中文 hello", count);
+        } while (!stoken.stop_requested() && count < PerlData::end_msg_idx);
     };
     for (int i = 0; i < th_count; i++) {
         ths.push_back(std::jthread(th_run));
     }
 
-    std::this_thread::sleep_for(seconds(test_s));
     for (int i = 0; i < ths.size(); i++) {
-        ths[i].request_stop();
+        ths[i].join();
     }
+     std::this_thread::sleep_for(seconds(5));
 
     auto now = system_clock::now();
-    std::this_thread::sleep_for(seconds(3));
-    std::cout << "--------------------------------------------\n";
-    std::cout << std::format("start: {:%F %T} ", zoned_time {current_zone(), start})
-              << std::format("end  : {:%F %T}\n", zoned_time {current_zone(), now});
 
-    int msg_count = LoggerData::total_msg_count;
-    double avg_ns = (test_s * 1'000'000'000.0) / msg_count; // 总耗时除以条数 = 平均耗时 ns/msg
-    double msgs_per_sec = msg_count / test_s;
-    std::cout << std::format("count: {}, th count: {}, avg: {:.2f} ns/msg, {:.2f} msgs/s\n",
-                             msg_count, th_count, avg_ns, msgs_per_sec);
-
-    std::cout << "--------------------------------------------\n";
+    LoggerData::perf.printResult();
 }
 
 int main()
@@ -54,7 +49,7 @@ int main()
     config.showFullPath = false;
     Logger::initialize(config);
 
-    press(1, 10);
+    press(1);
 
     return EXIT_SUCCESS;
 }

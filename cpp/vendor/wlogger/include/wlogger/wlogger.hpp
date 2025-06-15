@@ -41,7 +41,7 @@ public:
 
     template <typename... Args>
     void log(const std::source_location &loc, std::string tag, Level level,
-             std::format_string<Args...> fmt, Args &&... args)
+             std::format_string<Args...> fmt, Args &&...args)
     {
         if (level < _log_level)
             return;
@@ -58,6 +58,7 @@ public:
                     retries = 0;
                 }
             }
+            LoggerData::perf.producer();
         }
         catch (const std::exception &e) {
             std::cerr << "Logging error: " << e.what() << std::endl;
@@ -66,42 +67,42 @@ public:
 
     template <typename... Args>
     void trace(std::string tag, const std::source_location &loc, std::format_string<Args...> fmt,
-               Args &&... args)
+               Args &&...args)
     {
         log(loc, tag, Level::TRACE, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     void debug(std::string tag, const std::source_location &loc, std::format_string<Args...> fmt,
-               Args &&... args)
+               Args &&...args)
     {
         log(loc, tag, Level::DEBUG, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     void info(std::string tag, const std::source_location &loc, std::format_string<Args...> fmt,
-              Args &&... args)
+              Args &&...args)
     {
         log(loc, tag, Level::INFO, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     void warning(std::string tag, const std::source_location &loc, std::format_string<Args...> fmt,
-                 Args &&... args)
+                 Args &&...args)
     {
         log(loc, tag, Level::WARNING, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     void error(std::string tag, const std::source_location &loc, std::format_string<Args...> fmt,
-               Args &&... args)
+               Args &&...args)
     {
         log(loc, tag, Level::ERROR, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     void fatal(std::string tag, const std::source_location &loc, std::format_string<Args...> fmt,
-               Args &&... args)
+               Args &&...args)
     {
         log(loc, tag, Level::FATAL, fmt, std::forward<Args>(args)...);
     }

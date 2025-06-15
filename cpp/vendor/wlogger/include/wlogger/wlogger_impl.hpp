@@ -1,6 +1,6 @@
 #pragma once
 
-#include "wlogger_header.hpp"
+#include "wlogger_range_buffer.hpp"
 
 namespace wtool {
 namespace wlogger {
@@ -64,24 +64,9 @@ private:
             return;
 
         for (const auto &msg : _MsgBuffer) {
-            static TimeUse t("msg.format");
-            static TimeUse t2("onemsg ");
-            static int count = 0;
-            if (LoggerData::enablePerfStat) {
-                ++count;
-                if (count % 100 == 0) {
-                    t.start();
-                    t2.start();
-                }
-            }
             std::string msg_format = msg.format_str(config.showFullPath, config.showThread);
-            if (LoggerData::enablePerfStat) {
-                if (count % 100 == 0) {
-                    t.end();
-                }
-            }
 
-            LoggerData::total_msg_count++;
+            LoggerData::perf.consumer();
             if (config.fileOutput) {
                 _fileBuffer.insert(_fileBuffer.end(), msg_format.begin(), msg_format.end());
                 _fileBuffer.push_back('\n');
@@ -96,16 +81,6 @@ private:
                     _consoleBuffer.insert(_consoleBuffer.end(), msg_format.begin(),
                                           msg_format.end());
                     _consoleBuffer.push_back('\n');
-                }
-            }
-            if (LoggerData::enablePerfStat) {
-                if (count % 100 == 0) {
-                    t2.end();
-                }
-                if (count % 8000 == 0) {
-                    // print 需要在统计之后
-                    t.print();
-                    t2.print();
                 }
             }
         }

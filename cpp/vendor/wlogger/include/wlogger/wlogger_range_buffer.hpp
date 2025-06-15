@@ -2,10 +2,13 @@
 
 #include <array>
 #include <atomic>
+#include <format>
 #include <thread>
 #include <vector>
 
-#include "wlogger_helper.hpp"
+#include "perf.hpp"
+#include "wlogger_config.hpp"
+#include "wlogger_tool.hpp"
 
 #ifndef LOG_TAG
 #define LOG_TAG "Default"
@@ -76,53 +79,14 @@ private:
 namespace wlogger {
 
 class RingBuffer;
+class PerlData;
 struct LoggerData {
     static RingBuffer buffer;
-    inline static constexpr size_t Msg_Buffer_Size = 4096;
-    inline static constexpr size_t Range_Buffer_Size = 1 << 17; // 2^17 = 131,072
-
+    static PerlData perf;
     inline static constexpr bool enablePerfStat = false;
 
-    inline static size_t total_msg_count = 0;
-};
-
-enum class Level { TRACE, DEBUG, INFO, WARNING, ERROR, FATAL };
-
-const char *Color_Normal = "\033[0m";
-const char *Color_Warning = "\033[1;34m"; // 蓝
-const char *Color_Error = "\033[1;33m";   // 黄
-const char *Color_Fatal = "\033[1;31m";   // 红
-
-static constexpr std::array<std::string_view, 6> LEVEL_STRINGS
-    = {"TRACE", "DEBUG", "INFO ", "WARN ", "ERROR", "FATAL"};
-
-const char *getLevelColor(Level level)
-{
-    switch (level) {
-    case Level::WARNING:
-        return Color_Warning;
-    case Level::ERROR:
-        return Color_Error;
-    case Level::FATAL:
-        return Color_Fatal;
-
-    default:
-        return Color_Normal;
-    }
-}
-
-// logger configuration
-struct Config {
-    std::string logDir {"logs"};           // log directory
-    std::string filePrefix {"app"};        // log file prefix
-    size_t maxFileSize {10 * 1024 * 1024}; // max single file size (10MB)
-    size_t maxFiles {5};                   // max number of files to keep
-    Level minLevel {Level::INFO};          // minimum log level
-    bool consoleOutput {true};             // enable console output
-    bool fileOutput {true};                // enable file output
-    bool useColors {true};                 // enable colored output
-    bool showThread {true};                // show thread id in logs
-    bool showFullPath {false};             // show full file paths in logs
+    inline static constexpr int Msg_Buffer_Size = 4096;
+    inline static constexpr int Range_Buffer_Size = (1 << 17);
 };
 
 // log context information
@@ -221,37 +185,21 @@ struct alignas(64) LogMessage {
 
         return "";
     }
-
-private:
-    /*
-        // 取消此函数，放到format_str中，大概有50ns的提升（因该是少一次format的新能提升）
-        std::string formatTime() const
-        {
-            // 单次获取毫秒计数（最快方式）
-            const auto ms_since_epoch
-                =
-       std::chrono::duration_cast<std::chrono::milliseconds>(timestamp.time_since_epoch()); const
-       auto sec_part = std::chrono::floor<std::chrono::seconds>(timestamp);
-
-            // 此行大概有 200ns的耗时
-            return std::format("{:%Y-%m-%d %H:%M:%S}.{:03d}", sec_part, ms_since_epoch.count() %
-       1000);
-        }
-    */
 };
 
 struct alignas(64) RingBuffer {
     alignas(64) std::array<LogMessage, LoggerData::Range_Buffer_Size> messages;
-    alignas(64) std::atomic<size_t> head {0}; // cache line 1
-    alignas(64) std::atomic<size_t> tail {0}; // cache line 2
+    alignas(64) std::atomic<size_t> head {0}; 
+    alignas(64) std::atomic<size_t> tail {0};
 
     bool push(LogMessage &&msg)
     {
-        auto current_tail = tail.load(std::memory_order_relaxed);
-        auto next_tail = (current_tail + 1) & (LoggerData::Range_Buffer_Size - 1);
+        size_t current_tail = tail.load(std::memory_order_relaxed);
+        size_t next_tail = (current_tail + 1) & (LoggerData::Range_Buffer_Size - 1);
 
         if (next_tail == head.load(std::memory_order_relaxed)) {
             if (next_tail == head.load(std::memory_order_acquire)) {
+                LoggerData::perf.push_failed_count_buffer_is_full++;
                 return false;
             }
         }
@@ -264,11 +212,9 @@ struct alignas(64) RingBuffer {
     bool pop(LogMessage &msg)
     {
         auto current_head = head.load(std::memory_order_relaxed);
-
-        if (current_head == tail.load(std::memory_order_relaxed)) {
-            if (current_head == tail.load(std::memory_order_acquire)) {
-                return false;
-            }
+        if (current_head == tail.load(std::memory_order_acquire)) {
+            LoggerData::perf.pop_failed_count++;
+            return false;
         }
 
         msg = std::move(messages[current_head]);
@@ -279,6 +225,7 @@ struct alignas(64) RingBuffer {
 };
 
 RingBuffer LoggerData::buffer = RingBuffer();
+PerlData LoggerData::perf = {};
 
 } // namespace wlogger
 } // namespace wtool

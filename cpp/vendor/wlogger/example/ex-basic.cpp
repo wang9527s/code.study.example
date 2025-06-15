@@ -1,5 +1,5 @@
 #include <random>
-#include "include/wlogger.hpp"
+#include "wlogger/wlogger.hpp"
 
 using namespace wtool;
 using namespace wtool::wlogger;
