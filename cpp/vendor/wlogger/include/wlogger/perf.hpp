@@ -53,8 +53,9 @@ public:
     void clear()
     {
         // std::cout << std::format("old: producer={} consumer={} push_fail={} pop_fail={}\n",
-        //                          formatNum(producer_msg_count.load()), formatNum(consumer_msg_count),
-        //                          push_failed_count.load(), pop_failed_count);
+        //                          formatNum(producer_msg_count.load()),
+        //                          formatNum(consumer_msg_count), push_failed_count.load(),
+        //                          pop_failed_count);
 
         producer_msg_count = 0;
         consumer_msg_count = 0;
@@ -65,8 +66,9 @@ public:
 
         consumer_ns = producer_ns = 0;
         // std::cout << std::format("new: producer={} consumer={} push_fail={} pop_fail={}\n",
-        //                          formatNum(producer_msg_count.load()), formatNum(consumer_msg_count),
-        //                          push_failed_count.load(), pop_failed_count);
+        //                          formatNum(producer_msg_count.load()),
+        //                          formatNum(consumer_msg_count), push_failed_count.load(),
+        //                          pop_failed_count);
     }
 
     void producer()
@@ -109,23 +111,28 @@ public:
 
         if (consumer_msg_count != producer_msg_count) {
             std::cout << "error" << std::endl;
-            std::cout << "msg_count " << msg_count << ", consumer_msg_count is " << consumer_msg_count
-                  << ", producer_msg_count is " << producer_msg_count << std::endl;
+            std::cout << "msg_count " << msg_count << ", consumer_msg_count is "
+                      << consumer_msg_count << ", producer_msg_count is " << producer_msg_count
+                      << std::endl;
             // return;
         }
 
         auto printData = [](std::string tip, uint64_t msg_count, uint64_t total_ns) {
             double avg_ns_per_msg = static_cast<double>(total_ns) / msg_count;
             double msgs_per_sec = 1e9 / avg_ns_per_msg;
-            std::cout << std::format("{} : msg_count {}, total_ns {}, {:.2f} ns/msg, {} msgs/s\n", tip,
-                                     formatNum(msg_count), total_ns, avg_ns_per_msg, formatNum(msgs_per_sec));
+            std::cout << std::format("{} : msg_count {}, total_ns {}, {:.2f} ns/msg, {} msgs/s\n",
+                                     tip, formatNum(msg_count), total_ns, avg_ns_per_msg,
+                                     formatNum(msgs_per_sec));
         };
 
         printData("生产", msg_count, producer_ns);
         printData("消费", msg_count, consumer_ns);
 
-        std::cout << "push_failed_count: " << formatNum(push_failed_count.load()) << ", push_failed-buffer_is_full " << formatNum(push_failed_count_buffer_is_full.load()) << std::endl;
-        std::cout << "pop_failed_count : " << formatNum(pop_failed_count) << std::endl;
+        std::cout << "push_failed.  "
+                  << "compare_exchange_weak failed: " << formatNum(push_failed_count.load())
+                  << ", buffer_is_full " << formatNum(push_failed_count_buffer_is_full.load())
+                  << std::endl;
+        std::cout << "pop_failed.  " << formatNum(pop_failed_count) << std::endl;
     }
 };
 

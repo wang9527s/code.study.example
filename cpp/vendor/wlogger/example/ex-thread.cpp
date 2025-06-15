@@ -30,7 +30,7 @@ void press(int th_count)
     for (int i = 0; i < ths.size(); i++) {
         ths[i].join();
     }
-     std::this_thread::sleep_for(seconds(5));
+    std::this_thread::sleep_for(seconds(5));
 
     auto now = system_clock::now();
 
@@ -50,6 +50,9 @@ int main()
     Logger::initialize(config);
 
     press(1);
+    press(5);
+    press(8);
+    press(10);
 
     return EXIT_SUCCESS;
 }

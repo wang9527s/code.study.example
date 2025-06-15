@@ -189,7 +189,7 @@ struct alignas(64) LogMessage {
 
 struct alignas(64) RingBuffer {
     alignas(64) std::array<LogMessage, LoggerData::Range_Buffer_Size> messages;
-    alignas(64) std::atomic<size_t> head {0}; 
+    alignas(64) std::atomic<size_t> head {0};
     alignas(64) std::atomic<size_t> tail {0};
 
     bool push(LogMessage &&msg)
@@ -197,15 +197,18 @@ struct alignas(64) RingBuffer {
         size_t current_tail = tail.load(std::memory_order_relaxed);
         size_t next_tail = (current_tail + 1) & (LoggerData::Range_Buffer_Size - 1);
 
-        if (next_tail == head.load(std::memory_order_relaxed)) {
-            if (next_tail == head.load(std::memory_order_acquire)) {
-                LoggerData::perf.push_failed_count_buffer_is_full++;
-                return false;
-            }
+        if (next_tail == head.load(std::memory_order_acquire)) {
+            LoggerData::perf.push_failed_count_buffer_is_full++;
+            return false;
+        }
+
+        if (!tail.compare_exchange_weak(current_tail, next_tail, std::memory_order_acquire,
+                                        std::memory_order_relaxed)) {
+            LoggerData::perf.push_failed_count++;
+            return false;
         }
 
         new (&messages[current_tail]) LogMessage(std::move(msg));
-        tail.store(next_tail, std::memory_order_release);
         return true;
     }
 
