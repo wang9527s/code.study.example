@@ -54,7 +54,7 @@ int main()
     config.showFullPath = false;
     Logger::initialize(config);
 
-    press(1, 5);
+    press(1, 10);
 
     return EXIT_SUCCESS;
 }

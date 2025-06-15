@@ -29,7 +29,7 @@ spdlog就更复杂了，很多文件，一晚上没找到想要的。
 
 **注意，是ubuntu，不是debian**
 
-### 迭代
+### 迭代 (单生产者，性能)
 
 #### 2025.06.11
 
@@ -41,3 +41,22 @@ spdlog就更复杂了，很多文件，一晚上没找到想要的。
   **1,638,476.00 msgs/s**
 
   封装一个格式化时间的类，速度 -> **2045840.00 msgs/s**
+
+#### 2025.06.14
+
+```
+std::format_to(std::back_inserter(_fileBuffer), "{}\n", msg_format); 
+```
+
+ 改为
+
+```
+_fileBuffer.insert(_fileBuffer.end(), msg_format.begin(), msg_format.end());
+_fileBuffer.push_back('\n');
+```
+
+  速度 -> **2356789.00 msgs/s**
+
+移除时间戳统计
+
+  速度 -> **[2868657.00, 3175424.00] msgs/s**

@@ -81,6 +81,8 @@ struct LoggerData {
     inline static constexpr size_t Msg_Buffer_Size = 4096;
     inline static constexpr size_t Range_Buffer_Size = 1 << 17; // 2^17 = 131,072
 
+    inline static constexpr bool enablePerfStat = false;
+
     inline static size_t total_msg_count = 0;
 };
 
