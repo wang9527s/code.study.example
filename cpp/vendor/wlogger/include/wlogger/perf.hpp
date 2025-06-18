@@ -42,15 +42,12 @@ public:
     static constexpr uint64_t start_msg_idx = 5;
     static constexpr uint64_t end_msg_idx = 10 * Million + start_msg_idx;
 
-    enum Failed {
-        push_buff_is_full,
-        pop_buff_is_empty
-    };
+    enum Failed { push_buff_is_full, pop_buff_is_empty };
 
     std::atomic<uint64_t> producer_msg_count = 0;
 
     uint64_t consumer_msg_count = 0;
-    uint32_t err_count [8] = {0};
+    uint32_t err_count[8] = {0};
 
 public:
     void clear()
@@ -64,7 +61,6 @@ public:
         consumer_msg_count = 0;
 
         std::fill(std::begin(err_count), std::end(err_count), 0);
-
 
         consumer_ns = producer_ns = 0;
         // std::cout << std::format("new: producer={} consumer={} push_fail={} pop_fail={}\n",
@@ -127,12 +123,13 @@ public:
                                      formatNum(msgs_per_sec));
         };
 
-        printData("生产", msg_count, producer_ns);
+        // printData("生产", msg_count, producer_ns);
         printData("消费", msg_count, consumer_ns);
 
-        std::cout << "push_failed.  " << ", buffer_is_full "
-                  << formatNum(err_count[push_buff_is_full]) << std::endl;
-        std::cout << "pop_failed.  buffer_is_empty " << formatNum(err_count[pop_buff_is_empty]) << std::endl;
+        // std::cout << "push_failed.  " << ", buffer_is_full "
+        //   << formatNum(err_count[push_buff_is_full]) << std::endl;
+        // std::cout << "pop_failed.  buffer_is_empty " << formatNum(err_count[pop_buff_is_empty])
+        // << std::endl;
     }
 };
 

@@ -6,15 +6,11 @@ using namespace wtool;
 using namespace wtool::wlogger;
 using namespace std::chrono;
 
-void press(int th_count)
+void productData(int thread_count)
 {
-    std::this_thread::sleep_for(seconds(2));
-    std::cout << std::format("\n------------ producer Th count :{}--------------\n", th_count);
-
-    LoggerData::perf.clear();
-    auto start = system_clock::now();
     std::vector<std::jthread> ths;
     std::atomic<int> counter = 0;
+
     auto th_run = [&](std::stop_token stoken) {
         int count = 0;
         do {
@@ -23,18 +19,31 @@ void press(int th_count)
             LOG_INFO("     String: {} {}", "中文 hello", count);
         } while (!stoken.stop_requested() && count < PerlData::end_msg_idx);
     };
-    for (int i = 0; i < th_count; i++) {
+    for (int i = 0; i < thread_count; i++) {
         ths.push_back(std::jthread(th_run));
     }
 
     for (int i = 0; i < ths.size(); i++) {
         ths[i].join();
     }
-    std::this_thread::sleep_for(seconds(5));
+}
 
-    auto now = system_clock::now();
+void press(std::vector<int32_t> th_counts, int32_t repeat_count = 1)
+{
+    for (int thread_count : th_counts) {
+        std::cout << std::format("\n------------ producer Th count :{}--------------\n",
+                                 thread_count);
+        for (int i = 0; i < repeat_count; i++) {
+            std::this_thread::sleep_for(seconds(1));
+            LoggerData::perf.clear();
 
-    LoggerData::perf.printResult();
+            // 生产数据
+            productData(thread_count);
+
+            std::this_thread::sleep_for(seconds(6));
+            LoggerData::perf.printResult();
+        }
+    }
 }
 
 int main()
@@ -49,11 +58,8 @@ int main()
     config.showFullPath = false;
     Logger::initialize(config);
 
-    press(1);
-    press(5);
-    press(8);
-    press(10);
-    press(16);
+    press(std::vector<int32_t> {1, 5, 8, 10, 16}, 5);
+    // press(std::vector<int32_t> {1}, 1);
 
     return EXIT_SUCCESS;
 }

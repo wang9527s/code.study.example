@@ -97,99 +97,51 @@ push_failed.  compare_exchange_weak failed: 15,042,465, buffer_is_full 719,829,6
 pop_failed.  24,250,481
 ```
 
-#### 0616
+#### 2025.06.16
 
   push的时候，不使用原子操作，改为mutex。  
-  速度基本在 -> **[2,300,00.00,  3,300,000.00]msgs/s** 之间。  
-  超过10线程，一次极端差的情况 **1,928,125.75 msgs/s**
+
+  <del>速度基本在 -> **[2,300,00.00,  3,300,000.00]msgs/s** 之间。</del>   
+  <del>~~超过10线程，一次极端差的情况 **1,928,125.75 msgs/s**</del>
+
+### 2025.06.18
+
+  单线程可达到 2,800,000 msgs/s  
+  多线程在 [1,300,000, 2,500,000] msgs/s
 
 ```
 ------------ producer Th count :1--------------
-消费 : msg_count 10,000,000, total_ns 2927313052, 292.73 ns/msg, 3,416,102.01 msgs/s
-消费 : msg_count 10,000,000, total_ns 2775567123, 277.56 ns/msg, 3,602,867.29 msgs/s
-消费 : msg_count 10,000,000, total_ns 3567170037, 356.72 ns/msg, 2,803,342.68 msgs/s
-消费 : msg_count 10,000,000, total_ns 2702228068, 270.22 ns/msg, 3,700,649.89 msgs/s
+消费 : msg_count 10,000,000, total_ns 3552914328, 355.29 ns/msg, 2,814,590.81 msgs/s
+消费 : msg_count 10,000,000, total_ns 3824541470, 382.45 ns/msg, 2,614,692.53 msgs/s
+消费 : msg_count 10,000,000, total_ns 3705902822, 370.59 ns/msg, 2,698,397.79 msgs/s
+消费 : msg_count 10,000,000, total_ns 4164954349, 416.50 ns/msg, 2,400,986.70 msgs/s
+消费 : msg_count 10,000,000, total_ns 3783393026, 378.34 ns/msg, 2,643,130.10 msgs/s
 
 ------------ producer Th count :5--------------
-消费 : msg_count 10,000,000, total_ns 2860402774, 286.04 ns/msg, 3,496,011.15 msgs/s
-消费 : msg_count 10,000,000, total_ns 3034910174, 303.49 ns/msg, 3,294,990.44 msgs/s
-消费 : msg_count 10,000,000, total_ns 3006109218, 300.61 ns/msg, 3,326,559.11 msgs/s
-消费 : msg_count 10,000,000, total_ns 3116317620, 311.63 ns/msg, 3,208,915.53 msgs/s
+消费 : msg_count 10,000,000, total_ns 4545410113, 454.54 ns/msg, 2,200,021.51 msgs/s
+消费 : msg_count 10,000,000, total_ns 4456512309, 445.65 ns/msg, 2,243,907.19 msgs/s
+消费 : msg_count 10,000,000, total_ns 4382464444, 438.25 ns/msg, 2,281,821.14 msgs/s
+消费 : msg_count 10,000,000, total_ns 4606450653, 460.65 ns/msg, 2,170,868.80 msgs/s
+消费 : msg_count 10,000,000, total_ns 4429330968, 442.93 ns/msg, 2,257,677.30 msgs/s
 
 ------------ producer Th count :8--------------
-消费 : msg_count 10,000,000, total_ns 3362389052, 336.24 ns/msg, 2,974,075.83 msgs/s
-消费 : msg_count 10,000,000, total_ns 3565391888, 356.54 ns/msg, 2,804,740.77 msgs/s
-消费 : msg_count 10,000,000, total_ns 3149953272, 315.00 ns/msg, 3,174,650.27 msgs/s
-消费 : msg_count 10,000,000, total_ns 3523149675, 352.31 ns/msg, 2,838,369.33 msgs/s
+消费 : msg_count 10,000,000, total_ns 3930246323, 393.02 ns/msg, 2,544,369.79 msgs/s
+消费 : msg_count 10,000,000, total_ns 4277783162, 427.78 ns/msg, 2,337,659.40 msgs/s
+消费 : msg_count 10,000,000, total_ns 4787346243, 478.73 ns/msg, 2,088,839.93 msgs/s
+消费 : msg_count 10,000,000, total_ns 5130711159, 513.07 ns/msg, 1,949,047.55 msgs/s
+消费 : msg_count 10,000,000, total_ns 4392405941, 439.24 ns/msg, 2,276,656.61 msgs/s
 
 ------------ producer Th count :10--------------
-消费 : msg_count 10,000,000, total_ns 3431514606, 343.15 ns/msg, 2,914,165.07 msgs/s
-消费 : msg_count 10,000,000, total_ns 3535891815, 353.59 ns/msg, 2,828,140.83 msgs/s
-消费 : msg_count 10,000,000, total_ns 4100973658, 410.10 ns/msg, 2,438,445.31 msgs/s
-消费 : msg_count 10,000,000, total_ns 3843922929, 384.39 ns/msg, 2,601,508.98 msgs/s
+消费 : msg_count 10,000,000, total_ns 5164454055, 516.45 ns/msg, 1,936,313.09 msgs/s
+消费 : msg_count 10,000,000, total_ns 4893782969, 489.38 ns/msg, 2,043,408.97 msgs/s
+消费 : msg_count 10,000,000, total_ns 5088376858, 508.84 ns/msg, 1,965,263.24 msgs/s
+消费 : msg_count 10,000,000, total_ns 5180572304, 518.06 ns/msg, 1,930,288.67 msgs/s
+消费 : msg_count 10,000,000, total_ns 5001855776, 500.19 ns/msg, 1,999,257.97 msgs/s
 
 ------------ producer Th count :16--------------
-消费 : msg_count 10,000,000, total_ns 4393391007, 439.34 ns/msg, 2,276,146.14 msgs/s
-消费 : msg_count 10,000,000, total_ns 4319136362, 431.91 ns/msg, 2,315,277.68 msgs/s
-消费 : msg_count 10,000,000, total_ns 4338013109, 433.80 ns/msg, 2,305,202.81 msgs/s
-消费 : msg_count 10,000,000, total_ns 5186383707, 518.64 ns/msg, 1,928,125.75 msgs/s
-
-
-
-
-
-
-
-
------------- producer Th count :1--------------
-
-
-
------------- producer Th count :5--------------
-
-
-
------------- producer Th count :8--------------
-
-
-
------------- producer Th count :10--------------
-
-
-
------------- producer Th count :16--------------
-
-
-
------------- producer Th count :1--------------
-
-
------------- producer Th count :5--------------
-
-
------------- producer Th count :8--------------
-
-
------------- producer Th count :10--------------
-
------------- producer Th count :16--------------
-
-
------------- producer Th count :1--------------
-
-
-
------------- producer Th count :5--------------
-
-
-
------------- producer Th count :8--------------
-
-
------------- producer Th count :10--------------
-
-
-
------------- producer Th count :16--------------
-
+消费 : msg_count 10,000,000, total_ns 6484860587, 648.49 ns/msg, 1,542,053.20 msgs/s
+消费 : msg_count 10,000,000, total_ns 7175024226, 717.50 ns/msg, 1,393,723.52 msgs/s
+消费 : msg_count 10,000,000, total_ns 6940720202, 694.07 ns/msg, 1,440,772.67 msgs/s
+消费 : msg_count 10,000,000, total_ns 6632984450, 663.30 ns/msg, 1,507,616.98 msgs/s
+消费 : msg_count 10,000,000, total_ns 6475377286, 647.54 ns/msg, 1,544,311.56 msgs/s
 ```

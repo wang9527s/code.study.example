@@ -208,9 +208,11 @@ struct alignas(64) RingBuffer {
                 return false;
             }
             tail.store(next_tail, std::memory_order_relaxed);
+            // 如果此句在mutex的保护外，数据会被篡改
+            //     [1970-01-01 08:00:00.000000] [TRACE] [Default] [wlogger_range_buffer.hpp:149]
+            new (&messages[current_tail]) LogMessage(std::move(msg));
         }
 
-        new (&messages[current_tail]) LogMessage(std::move(msg));
         return true;
     }
 
