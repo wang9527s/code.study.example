@@ -29,6 +29,29 @@ struct alignas(64) RingBuffer
         return true;
     }
 
+    // 支持多线程写入，请注意如果冲突严重，效率也不高
+    bool push_mt(LogMessage &&msg)
+    {
+        size_t current_tail = tail.load(std::memory_order_relaxed);
+        size_t next_tail = (current_tail + 1) & (BUFFER_SIZE - 1);
+
+        if (next_tail == head.load(std::memory_order_acquire)) {
+            LoggerData::perf.push_failed_count_buffer_is_full++;
+            return false;
+        }
+
+        if (!tail.compare_exchange_weak(current_tail, next_tail,
+                                        std::memory_order_acquire,
+                                        std::memory_order_relaxed)) {
+            LoggerData::perf.push_failed_count++;
+            return false;
+        }
+
+        new (&messages[current_tail]) LogMessage(std::move(msg));
+        return true;
+    }
+
+
     bool pop(LogMessage &msg)
     {
         auto current_head = head.load(std::memory_order_relaxed);

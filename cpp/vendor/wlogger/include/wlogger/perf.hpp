@@ -40,7 +40,7 @@ class PerlData
 
 public:
     static constexpr uint64_t start_msg_idx = 5;
-    static constexpr uint64_t end_msg_idx = 10 * Million + start_msg_idx;
+    static constexpr uint64_t end_msg_idx = 3 * Million + start_msg_idx;
 
     enum Failed { push_buff_is_full, pop_buff_is_empty };
 

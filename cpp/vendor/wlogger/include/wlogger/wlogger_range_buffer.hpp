@@ -167,7 +167,7 @@ struct alignas(64) LogMessage {
     std::string format_str(bool showFullPath, bool showThread) const
     {
         const auto &level_str = LEVEL_STRINGS[static_cast<size_t>(level)];
-        std::string file(context._loc.file_name());
+        std::string_view file(context._loc.file_name());
         if (!showFullPath) [[likely]] {
             if (auto pos = file.find_last_of("/\\"); pos != std::string_view::npos) [[likely]] {
                 file = file.substr(pos + 1);

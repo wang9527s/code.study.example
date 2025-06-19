@@ -34,13 +34,13 @@ void press(std::vector<int32_t> th_counts, int32_t repeat_count = 1)
         std::cout << std::format("\n------------ producer Th count :{}--------------\n",
                                  thread_count);
         for (int i = 0; i < repeat_count; i++) {
-            std::this_thread::sleep_for(seconds(1));
+            std::this_thread::sleep_for(milliseconds(100));
             LoggerData::perf.clear();
 
             // 生产数据
             productData(thread_count);
 
-            std::this_thread::sleep_for(seconds(6));
+            std::this_thread::sleep_for(seconds(1));
             LoggerData::perf.printResult();
         }
     }
@@ -54,7 +54,7 @@ int main()
     config.fileOutput = true;
     config.consoleOutput = false;
     config.useColors = true;
-    config.showThread = false;
+    config.showThread = true;
     config.showFullPath = false;
     Logger::initialize(config);
 
