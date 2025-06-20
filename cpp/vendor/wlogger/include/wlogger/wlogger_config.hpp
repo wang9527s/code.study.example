@@ -17,6 +17,13 @@ const char *Color_Fatal = "\033[1;31m";   // 红
 static constexpr std::array<std::string_view, 6> LEVEL_STRINGS
     = {"TRACE", "DEBUG", "INFO ", "WARN ", "ERROR", "FATAL"};
 
+struct ConstData {
+    inline static constexpr bool enablePerfStat = false;
+
+    inline static constexpr int Msg_Buffer_Size = 4096;
+    inline static constexpr int Range_Buffer_Size = (1 << 17);
+};
+
 const char *getLevelColor(Level level)
 {
     switch (level) {

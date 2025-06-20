@@ -5,12 +5,32 @@
 namespace wtool {
 namespace wlogger {
 
+std::string format_size_kb_mb(size_t bytes)
+{
+    constexpr size_t KB = 1024;
+    constexpr size_t MB = 1024 * KB;
+
+    double size = static_cast<double>(bytes);
+    std::string unit = "B";
+
+    if (bytes >= MB) {
+        size = size / MB;
+        unit = "MB";
+    }
+    else if (bytes >= KB) {
+        size = size / KB;
+        unit = "KB";
+    }
+
+    return std::to_string(bytes) + unit;
+}
+
 class LoggerWorkThread
 {
 public:
     LoggerWorkThread()
     {
-        _MsgBuffer.reserve(LoggerData::Msg_Buffer_Size);
+        _MsgBuffer.reserve(ConstData::Msg_Buffer_Size);
         _fileBuffer.reserve(1024 * 1024);
         _consoleBuffer.reserve(1024 * 1024);
     }
@@ -108,7 +128,7 @@ private:
         while (!st.stop_requested()) {
             LogMessage msg;
             // collect messages until batch is full or queue is empty
-            while (_MsgBuffer.size() < LoggerData::Msg_Buffer_Size && LoggerData::buffer.pop(msg)) {
+            while (_MsgBuffer.size() < ConstData::Msg_Buffer_Size && LoggerData::buffer.pop(msg)) {
                 _MsgBuffer.push_back(std::move(msg));
             }
 

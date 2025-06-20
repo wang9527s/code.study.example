@@ -40,7 +40,10 @@ void press(std::vector<int32_t> th_counts, int32_t repeat_count = 1)
             // 生产数据
             productData(thread_count);
 
-            std::this_thread::sleep_for(seconds(1));
+            do {
+                std::this_thread::sleep_for(milliseconds(100));
+            } while (!LoggerData::perf.consumer_over());
+
             LoggerData::perf.printResult();
         }
     }
@@ -51,7 +54,7 @@ int main()
     std::filesystem::remove("./logs/app.log");
     wlogger::Config config;
     config.minLevel = wlogger::Level::TRACE;
-    config.fileOutput = true;
+    config.fileOutput = false;
     config.consoleOutput = false;
     config.useColors = true;
     config.showThread = true;

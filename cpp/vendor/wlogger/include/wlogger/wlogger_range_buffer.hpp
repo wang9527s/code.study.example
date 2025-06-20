@@ -16,66 +16,6 @@
 
 namespace wtool {
 
-std::string format_size_kb_mb(size_t bytes)
-{
-    constexpr size_t KB = 1024;
-    constexpr size_t MB = 1024 * KB;
-
-    double size = static_cast<double>(bytes);
-    std::string unit = "B";
-
-    if (bytes >= MB) {
-        size = size / MB;
-        unit = "MB";
-    }
-    else if (bytes >= KB) {
-        size = size / KB;
-        unit = "KB";
-    }
-
-    return std::to_string(bytes) + unit;
-}
-
-class TimeUse
-{
-    std::string _tag;
-
-public:
-    TimeUse(std::string tag)
-        : total_duration_ns(0)
-        , _tag(tag)
-        , count(0)
-        , current_duration_ns(0)
-    {
-    }
-
-    void start() { start_time = std::chrono::system_clock::now(); }
-
-    void end()
-    {
-        auto end_time = std::chrono::system_clock::now();
-        current_duration_ns
-            = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count();
-        total_duration_ns += current_duration_ns;
-        ++count;
-    }
-
-    void print() const
-    {
-        double avg_ns = static_cast<double>(total_duration_ns) / count;
-        double msgs_per_sec = 1'000'000'000.0 / avg_ns;
-
-        std::cout << std::format("{} :  avg: {:.2f} ns/msg, {:.2f} msgs/s\n", _tag, avg_ns,
-                                 msgs_per_sec);
-    }
-
-private:
-    std::chrono::time_point<std::chrono::system_clock> start_time;
-    long long current_duration_ns;
-    long long total_duration_ns;
-    int count;
-};
-
 namespace wlogger {
 
 class RingBuffer;
@@ -83,10 +23,6 @@ class PerlData;
 struct LoggerData {
     static RingBuffer buffer;
     static PerlData perf;
-    inline static constexpr bool enablePerfStat = false;
-
-    inline static constexpr int Msg_Buffer_Size = 4096;
-    inline static constexpr int Range_Buffer_Size = (1 << 17);
 };
 
 // log context information
@@ -188,30 +124,25 @@ struct alignas(64) LogMessage {
 };
 
 struct alignas(64) RingBuffer {
-    alignas(64) std::array<LogMessage, LoggerData::Range_Buffer_Size> messages;
+    alignas(64) std::array<LogMessage, ConstData::Range_Buffer_Size> messages;
     alignas(64) std::atomic<size_t> head {0};
     alignas(64) std::atomic<size_t> tail {0};
     std::mutex _mutex;
 
     bool push(LogMessage &&msg)
     {
-        size_t current_tail;
-        size_t next_tail;
+        std::lock_guard<std::mutex> lock(_mutex);
+        size_t current_tail = tail.load(std::memory_order_relaxed);
+        size_t next_tail = (current_tail + 1) & (ConstData::Range_Buffer_Size - 1);
 
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            size_t current_tail = tail.load(std::memory_order_relaxed);
-            size_t next_tail = (current_tail + 1) & (LoggerData::Range_Buffer_Size - 1);
-
-            if (next_tail == head.load(std::memory_order_acquire)) {
-                LoggerData::perf.err_count[PerlData::push_buff_is_full]++;
-                return false;
-            }
-            tail.store(next_tail, std::memory_order_relaxed);
-            // 如果此句在mutex的保护外，数据会被篡改
-            //     [1970-01-01 08:00:00.000000] [TRACE] [Default] [wlogger_range_buffer.hpp:149]
-            new (&messages[current_tail]) LogMessage(std::move(msg));
+        if (next_tail == head.load(std::memory_order_acquire)) {
+            LoggerData::perf.err_count[PerlData::push_buff_is_full]++;
+            return false;
         }
+        tail.store(next_tail, std::memory_order_relaxed);
+        // 如果此句在mutex的保护外，数据会被篡改
+        //     [1970-01-01 08:00:00.000000] [TRACE] [Default] [wlogger_range_buffer.hpp:149]
+        new (&messages[current_tail]) LogMessage(std::move(msg));
 
         return true;
     }
@@ -225,13 +156,13 @@ struct alignas(64) RingBuffer {
         }
 
         msg = std::move(messages[current_head]);
-        head.store((current_head + 1) & (LoggerData::Range_Buffer_Size - 1),
+        head.store((current_head + 1) & (ConstData::Range_Buffer_Size - 1),
                    std::memory_order_release);
         return true;
     }
 };
 
-RingBuffer LoggerData::buffer = RingBuffer();
+RingBuffer LoggerData::buffer {};
 PerlData LoggerData::perf = {};
 
 } // namespace wlogger

@@ -46,27 +46,18 @@ public:
 
     std::atomic<uint64_t> producer_msg_count = 0;
 
-    uint64_t consumer_msg_count = 0;
+    std::atomic<uint64_t> consumer_msg_count = 0;
     uint32_t err_count[8] = {0};
 
 public:
     void clear()
     {
-        // std::cout << std::format("old: producer={} consumer={} push_fail={} pop_fail={}\n",
-        //                          formatNum(producer_msg_count.load()),
-        //                          formatNum(consumer_msg_count), push_failed_count.load(),
-        //                          pop_failed_count);
-
         producer_msg_count = 0;
         consumer_msg_count = 0;
 
         std::fill(std::begin(err_count), std::end(err_count), 0);
 
         consumer_ns = producer_ns = 0;
-        // std::cout << std::format("new: producer={} consumer={} push_fail={} pop_fail={}\n",
-        //                          formatNum(producer_msg_count.load()),
-        //                          formatNum(consumer_msg_count), push_failed_count.load(),
-        //                          pop_failed_count);
     }
 
     void producer()
@@ -103,15 +94,25 @@ public:
         }
     }
 
+    bool consumer_over()
+    {
+        int msg_count = end_msg_idx - start_msg_idx;
+        if (consumer_msg_count == producer_msg_count) {
+            return true;
+        }
+
+        return false;
+    }
+
     void printResult()
     {
         int msg_count = end_msg_idx - start_msg_idx;
 
         if (consumer_msg_count != producer_msg_count) {
             std::cout << "error" << std::endl;
-            std::cout << "msg_count " << msg_count << ", consumer_msg_count is "
-                      << consumer_msg_count << ", producer_msg_count is " << producer_msg_count
-                      << std::endl;
+            std::cout << "msg_count " << formatNum(msg_count) << ", consumer_msg_count is "
+                      << formatNum(consumer_msg_count.load()) << ", producer_msg_count is "
+                      << formatNum(producer_msg_count.load()) << std::endl;
             // return;
         }
 
