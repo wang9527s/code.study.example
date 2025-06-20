@@ -52,7 +52,7 @@ public:
 
             constexpr int MAX_RETRIES = 100;
             int retries = 0;
-            while (!LoggerData::buffer.push(std::move(msg))) {
+            while (!LoggerData::buffer.enqueue(std::move(msg))) {
                 if (++retries > MAX_RETRIES) {
                     std::this_thread::yield();
                     retries = 0;

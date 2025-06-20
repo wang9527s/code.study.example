@@ -6,6 +6,10 @@
 #include <thread>
 #include <vector>
 
+#define USE_moodycamel 1
+#ifdef USE_moodycamel
+#include "../../../lockfree/moodycamel/concurrentqueue.h"
+#endif
 #include "perf.hpp"
 #include "wlogger_config.hpp"
 #include "wlogger_tool.hpp"
@@ -20,8 +24,13 @@ namespace wlogger {
 
 class RingBuffer;
 class PerlData;
+class LogMessage;
 struct LoggerData {
+#ifdef USE_moodycamel
+    static moodycamel::ConcurrentQueue<LogMessage> buffer;
+#else
     static RingBuffer buffer;
+#endif
     static PerlData perf;
 };
 
@@ -129,7 +138,7 @@ struct alignas(64) RingBuffer {
     alignas(64) std::atomic<size_t> tail {0};
     std::mutex _mutex;
 
-    bool push(LogMessage &&msg)
+    bool enqueue(LogMessage &&msg)
     {
         std::lock_guard<std::mutex> lock(_mutex);
         size_t current_tail = tail.load(std::memory_order_relaxed);
@@ -147,7 +156,7 @@ struct alignas(64) RingBuffer {
         return true;
     }
 
-    bool pop(LogMessage &msg)
+    bool try_dequeue(LogMessage &msg)
     {
         auto current_head = head.load(std::memory_order_relaxed);
         if (current_head == tail.load(std::memory_order_acquire)) {
@@ -163,7 +172,11 @@ struct alignas(64) RingBuffer {
     }
 };
 
+#ifdef USE_moodycamel
+moodycamel::ConcurrentQueue<LogMessage> LoggerData::buffer {};
+#else
 RingBuffer LoggerData::buffer {};
+#endif
 PerlData LoggerData::perf = {};
 
 } // namespace wlogger

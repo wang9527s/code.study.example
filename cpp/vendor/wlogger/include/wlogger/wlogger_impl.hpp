@@ -128,7 +128,8 @@ private:
         while (!st.stop_requested()) {
             LogMessage msg;
             // collect messages until batch is full or queue is empty
-            while (_MsgBuffer.size() < ConstData::Msg_Buffer_Size && LoggerData::buffer.pop(msg)) {
+            while (_MsgBuffer.size() < ConstData::Msg_Buffer_Size
+                   && LoggerData::buffer.try_dequeue(msg)) {
                 _MsgBuffer.push_back(std::move(msg));
             }
 
@@ -142,7 +143,7 @@ private:
 
         // process remaining messages before shutdown
         LogMessage msg;
-        while (LoggerData::buffer.pop(msg)) {
+        while (LoggerData::buffer.try_dequeue(msg)) {
             _MsgBuffer.push_back(std::move(msg));
         }
         porcessMsgBuffer();
