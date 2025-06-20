@@ -139,11 +139,11 @@ struct alignas(64) RingBuffer {
             LoggerData::perf.err_count[PerlData::push_buff_is_full]++;
             return false;
         }
-        tail.store(next_tail, std::memory_order_relaxed);
+
         // 如果此句在mutex的保护外，数据会被篡改
         //     [1970-01-01 08:00:00.000000] [TRACE] [Default] [wlogger_range_buffer.hpp:149]
         new (&messages[current_tail]) LogMessage(std::move(msg));
-
+        tail.store(next_tail, std::memory_order_release);
         return true;
     }
 
@@ -156,6 +156,7 @@ struct alignas(64) RingBuffer {
         }
 
         msg = std::move(messages[current_head]);
+        messages[current_head].~LogMessage();
         head.store((current_head + 1) & (ConstData::Range_Buffer_Size - 1),
                    std::memory_order_release);
         return true;
