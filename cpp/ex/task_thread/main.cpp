@@ -35,6 +35,13 @@ int main()
         },
         name);
 
+    thread.PostTaskSync([&name]() {
+        std::cout << std::this_thread::get_id() << " sync 1\n";
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+        std::cout << std::this_thread::get_id() << " sync 2\n";
+    });
+    std::cout << std::this_thread::get_id() << " sync over\n";
+
     std::thread th([&] {
         std::cout << std::this_thread::get_id() << " th\n";
         // 延迟执行（2秒后）

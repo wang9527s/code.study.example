@@ -1,8 +1,10 @@
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <functional>
+#include <future>
 #include <mutex>
 #include <queue>
 #include <thread>
@@ -41,6 +43,27 @@ public:
             task_queue_.emplace(TaskItem {std::move(bound_task), exec_time});
         }
         cv_.notify_one();
+    }
+
+    // 同步任务提交（支持返回值，阻塞等待任务执行完成）
+    template <typename F, typename... Args>
+    auto PostTaskSync(F &&f, Args &&...args) -> decltype(f(args...))
+    {
+        using ReturnType = decltype(f(args...));
+        /*
+            std::packaged_task内部封装了一个 std::promise
+            task()执行完后，自动调用 std::promise::setValue
+        */
+        std::packaged_task<ReturnType()> task(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+        auto future = task.get_future();
+
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            task_queue_.emplace(TaskItem {[&task]() { task(); }, std::chrono::steady_clock::now()});
+        }
+        cv_.notify_one();
+
+        return future.get(); // 阻塞等待任务执行完毕
     }
 
 private:
