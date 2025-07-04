@@ -66,13 +66,13 @@ public:
         const int32_t count = ++producer_msg_count;
         if (count == start_msg_idx) {
             // std::cout << "start producer\n";
-            auto s = system_clock::now();
-            producer_s = duration_cast<nanoseconds>(s.time_since_epoch()).count();
+            auto s = steady_clock::now();
+            producer_s = duration_cast<nanoseconds>(s.time_since_epoch()).count();          
         }
         else if (count == end_msg_idx) {
-            auto e = system_clock::now();
+            auto e = steady_clock::now();
             // std::cout << "stop producer\n";
-            producer_e = duration_cast<nanoseconds>(e.time_since_epoch()).count();
+            producer_e = duration_cast<nanoseconds>(e.time_since_epoch()).count(); 
             producer_ns = producer_e - producer_s;
         }
     }
@@ -83,12 +83,12 @@ public:
 
         if (count == start_msg_idx) {
             // std::cout << "start consumer\n";
-            auto s = system_clock::now();
+            auto s = steady_clock::now();
             consumer_s = duration_cast<nanoseconds>(s.time_since_epoch()).count();
         }
         else if (count == end_msg_idx) {
             // std::cout << "stop consumer\n";
-            auto e = system_clock::now();
+            auto e = steady_clock::now();
             consumer_e = duration_cast<nanoseconds>(e.time_since_epoch()).count();
             consumer_ns = consumer_e - consumer_s;
         }
