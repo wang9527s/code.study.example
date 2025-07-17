@@ -57,11 +57,14 @@ function build_samba() {
     rm -rf "samba-${version}"
     tar -zxvf "samba-${version}.tar.gz"
     cd "samba-${version}"
-
+    rm -rf "$(pwd)/../../build_install_${version}"
+    
     # MacOS ACL 支持有问题，禁用ACL支持
     ./configure --prefix="$(pwd)/../../build_install_${version}" --without-acl-support
     make -j$(sysctl -n hw.ncpu) # V=1
     make install
+
+    sudo chown -R mi:staff "$(pwd)/../../build_install_${version}"
 }
 
 install_env
