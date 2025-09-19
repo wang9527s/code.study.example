@@ -14,7 +14,7 @@ if [ ! -d "./FTXUI" ]; then
     make -j4
 fi
 
-g++ demo.cpp -std=c++20 -pthread \
+g++ demo.cpp -std=c++17 -pthread \
     -I ./FTXUI/include   \
     ./FTXUI/build/libftxui-component.a \
     ./FTXUI/build/libftxui-dom.a   \
