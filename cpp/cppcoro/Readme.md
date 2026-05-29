@@ -25,3 +25,10 @@
   - 因此：`co::resume` 只能调度器调用，`co::yield` 只能协程内部调用，搞反会导致 main_ctx 被覆盖
 
 
+### 02.coroutine_asm - 汇编
+
+和ucontext的逻辑基本相同，主要是自己实现了：
+
+1) 在指定栈上虚构一个"即将执行 func"的栈帧```fake_stack```。  
+2) 切换到指定的栈帧执行```context_switch```。
+
